@@ -44,3 +44,59 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code order
+/clarifica-obra
+├── node_modules/
+├── public/
+├── src/
+│   ├── assets/                # Arquivos estáticos (fontes, ícones, imagens grandes)
+│   │   ├── fonts/
+│   │   └── images/
+│   │
+│   ├── components/            # Componentes reutilizáveis, de baixo nível
+│   │   ├── ui/                # Componentes genéricos (Botão, Input, Modal, Card)
+│   │   │   ├── Button/
+│   │   │   │   ├── Button.tsx
+│   │   │   │   └── Button.styles.ts (ou .css)
+│   │   │   └── Input/
+│   │   │
+│   │   └── layout/            # Estrutura da página (Header, Footer, Sidebar)
+│   │       ├── Header/
+│   │       └── Sidebar/
+│   │
+│   ├── hooks/                 # Lógica de componentes reutilizável (useDebounce, useAuth)
+│   │   ├── useAuth.ts
+│   │   └── useDebounce.ts
+│   │
+│   ├── pages/                 # Componentes de nível superior (páginas ou rotas)
+│   │   ├── Home/
+│   │   │   ├── Home.tsx       # Componente principal da página
+│   │   │   └── Home.styles.ts
+│   │   ├── Dashboard/
+│   │   └── ObraDetalhe/
+│   │
+│   ├── services/              # Funções para comunicação com APIs (requisições HTTP)
+│   │   ├── api.ts             # Configuração do Axios/Fetch
+│   │   └── obrasService.ts    # Funções para endpoints de Obras
+│   │
+│   ├── styles/                # Estilos globais e configurações de tema
+│   │   ├── global.css         # Reset CSS e estilos base
+│   │   └── theme.ts           # Definições de cores/tipografia (se usar Styled Components)
+│   │
+│   ├── types/                 # Definições de tipos TypeScript (interfaces, types)
+│   │   ├── obra.d.ts
+│   │   └── user.d.ts
+│   │
+│   ├── utils/                 # Funções utilitárias simples (formatadores, validadores)
+│   │   ├── formatter.ts
+│   │   └── validator.ts
+│   │
+│   ├── App.tsx                # Componente principal / Roteamento
+│   ├── main.tsx               # Entry point da aplicação (onde o React é renderizado)
+│   └── index.css              # Arquivo de diretivas do Tailwind/CSS global
+│
+├── tailwind.config.js         # Configuração do Tailwind CSS
+├── postcss.config.js          # Configuração do PostCSS (para CRA)
+├── package.json
+└── tsconfig.json              # Configuração do TypeScript
