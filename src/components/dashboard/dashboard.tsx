@@ -1,6 +1,10 @@
 import { TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
 
-export const ResumoDashboard = () => {
+interface ResumoDashboardProps {
+    isReadOnly?: boolean;
+}
+
+export const ResumoDashboard: React.FC<ResumoDashboardProps> = ({ isReadOnly }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-center mb-4">

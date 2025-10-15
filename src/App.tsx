@@ -1,5 +1,6 @@
 import { Calendar, Users, Wrench, Package, AlertTriangle, Camera, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { UserTypeProvider, useUserType } from "./contexts/UserTypeContext";
 import { ServicosExecutados } from "./components/executed-services/executed-services";
 import { InformacoesGerais } from "./components/general/general-information";
 import { EquipePresente } from "./components/team-present/team-present";
@@ -7,9 +8,14 @@ import { MateriaisUtilizados } from "./components/used-materials/used-materials"
 import { ResumoDashboard } from "./components/dashboard/dashboard";
 import { ObservacoesPendencias } from "./components/observation/observation";
 import { FotosRegistros } from "./components/photos/photos";
+import { getUserType } from "./services/user.service";
 
-export const App = () => {
+const AppContent = () => {
   const [secaoAtiva, setSecaoAtiva] = useState('geral');
+
+  const { isCustomer, loading } = useUserType();
+
+  console.log("isCustomer:", isCustomer);
 
   const secoes = [
     { id: 'geral', nome: 'Informações Gerais', icon: Calendar },
@@ -20,6 +26,10 @@ export const App = () => {
     { id: 'fotos', nome: 'Fotos', icon: Camera },
     { id: 'resumo', nome: 'Resumo', icon: TrendingUp },
   ];
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-xl">Carregando...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -48,14 +58,14 @@ export const App = () => {
       </div>
       
       <div className="container mx-auto p-4">
-        {secaoAtiva === 'geral' && <InformacoesGerais />}
-        {secaoAtiva === 'equipe' && <EquipePresente />}
-        {secaoAtiva === 'servicos' && <ServicosExecutados />}
-        {secaoAtiva === 'materiais' && <MateriaisUtilizados />}
-        {secaoAtiva === 'observacoes' && <ObservacoesPendencias />}
-        {secaoAtiva === 'fotos' && <FotosRegistros />}
-        {secaoAtiva === 'resumo' && <ResumoDashboard />}
-        
+  {secaoAtiva === 'geral' && <InformacoesGerais isReadOnly={isCustomer} />}
+  {secaoAtiva === 'equipe' && <EquipePresente isReadOnly={isCustomer} />}
+  {secaoAtiva === 'servicos' && <ServicosExecutados isReadOnly={isCustomer} />}
+  {secaoAtiva === 'materiais' && <MateriaisUtilizados isReadOnly={isCustomer} />}
+  {secaoAtiva === 'observacoes' && <ObservacoesPendencias isReadOnly={isCustomer} />}
+  {secaoAtiva === 'fotos' && <FotosRegistros isReadOnly={isCustomer} />}
+  {secaoAtiva === 'resumo' && <ResumoDashboard isReadOnly={isCustomer} />}
+            
         <div className="flex justify-end gap-4 mt-6">
           <button className="bg-gray-500 text-white px-6 py-3 rounded hover:bg-gray-600">
             Salvar Rascunho
@@ -68,3 +78,9 @@ export const App = () => {
     </div>
   );
 };
+
+export const App = () => (
+  <UserTypeProvider>
+    <AppContent />
+  </UserTypeProvider>
+);

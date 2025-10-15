@@ -1,6 +1,10 @@
 import { AlertTriangle } from "lucide-react";
 
-export const ObservacoesPendencias = () => {
+interface ObservacoesPendenciasProps {
+    isReadOnly?: boolean;
+}
+
+export const ObservacoesPendencias: React.FC<ObservacoesPendenciasProps> = ({ isReadOnly }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-center mb-4">
