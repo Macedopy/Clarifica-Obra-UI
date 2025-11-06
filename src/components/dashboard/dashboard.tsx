@@ -16,7 +16,7 @@ export const ResumoDashboard: React.FC<ResumoDashboardProps> = ({ isReadOnly }) 
                 <div>
                     <label className="block text-sm font-medium mb-2">% Progresso Geral da Obra</label>
                     <div className="flex items-center gap-4">
-                        <input type="range" min="0" max="100" className="flex-1" defaultValue="45" />
+                        <input type="range" min="0" max="100" className="flex-1" defaultValue="45" disabled={true} />
                         <span className="font-bold text-lg">45%</span>
                     </div>
                     <div className="mt-2 bg-gray-200 rounded-full h-4">
@@ -40,7 +40,7 @@ export const ResumoDashboard: React.FC<ResumoDashboardProps> = ({ isReadOnly }) 
 
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-2">Prazo Estimado de Conclusão</label>
-                    <input type="date" className="w-full p-2 border rounded" />
+                    <input type="date" className="w-full p-2 border rounded" disabled={true}     defaultValue={new Date().toISOString().split('T')[0]} />
                 </div>
 
                 <div className="md:col-span-2">

@@ -1,219 +1,270 @@
 import React, { useState, useEffect } from 'react';
-import { TeamPresentService } from '../../services/team-present.service';
-import { Users, X } from 'lucide-react';
+import { Users, X, Plus, Edit3, Save, Clock, UserCheck, UserX, Coffee } from 'lucide-react';
 
-export interface EquipeItem {
-    id: string;
+interface MembroEquipe {
+  id: string;
+  nome: string;
+  funcao: string;
+  cpf: string;
+  horasTrabalhadas: number;
+  status: 'presente' | 'ausente' | 'folga';
+  avatar: string;
+  observacao: string;
+}
+
+interface EquipeUtilizadaProps {
+  isReadOnly?: boolean;
+  faseId: string;
+}
+
+export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
+  isReadOnly = false,
+  faseId
+}) => {
+  const STORAGE_KEY = `equipe-fase-${faseId}`;
+  const [membros, setMembros] = useState<MembroEquipe[]>([]);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [editTemp, setEditTemp] = useState<{
+    nome: string;
     funcao: string;
-    quantidade: number;
+    cpf: string;
     horasTrabalhadas: number;
-    horasExtras: number;
-    faltas: number;
-    nomesFaltosos: string;
-}
+    status: 'presente' | 'ausente' | 'folga';
+    observacao: string;
+  }>({
+    nome: '',
+    funcao: '',
+    cpf: '',
+    horasTrabalhadas: 0,
+    status: 'presente',
+    observacao: ''
+  });
 
-interface EquipePresenteProps {
-    isReadOnly?: boolean;
-}
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) setMembros(JSON.parse(saved));
+  }, [faseId]);
 
-export const EquipePresente: React.FC<EquipePresenteProps> = ({ isReadOnly }) => {
-    const [equipe, setEquipe] = useState<EquipeItem[]>([
-        {
-            id: '1',
-            funcao: '',
-            quantidade: 0,
-            horasTrabalhadas: 0,
-            horasExtras: 0,
-            faltas: 0,
-            nomesFaltosos: ''
-        }
-    ]);
+  useEffect(() => {
+    if (membros.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(membros));
+    }
+  }, [membros]);
 
-    isReadOnly ?? TeamPresentService.getAll()
-        .then(data => {
-            if (Array.isArray(data) && data.length > 0) {
-                setEquipe(data);
-            }
-        })
-        .catch(() => {
-            // Em caso de erro, mantém o estado padrão
-        });
-
-    const adicionarFuncao = () => {
-        const novoId = Date.now().toString();
-        setEquipe([
-            ...equipe,
-            {
-                id: novoId,
-                funcao: '',
-                quantidade: 0,
-                horasTrabalhadas: 0,
-                horasExtras: 0,
-                faltas: 0,
-                nomesFaltosos: ''
-            }
-        ]);
+  const adicionarMembro = () => {
+    const novo: MembroEquipe = {
+      id: Date.now().toString(),
+      nome: 'Novo Membro',
+      funcao: 'Ajudante',
+      cpf: '',
+      horasTrabalhadas: 0,
+      status: 'presente',
+      avatar: '',
+      observacao: ''
     };
+    setMembros(prev => [...prev, novo]);
+  };
 
-    const removerFuncao = (id: string) => {
-        setEquipe(equipe.filter(item => item.id !== id));
-    };
+  const removerMembro = (id: string) => {
+    setMembros(prev => prev.filter(m => m.id !== id));
+    setEditandoId(null);
+  };
 
-    const atualizarEquipe = (id: string, campo: keyof EquipeItem, valor: string | number) => {
-        setEquipe(equipe.map(item =>
-            item.id === id ? { ...item, [campo]: valor } : item
-        ));
-    };
+  const atualizarMembro = (id: string, updates: Partial<MembroEquipe>) => {
+    setMembros(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+  };
 
-    return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                    <Users className="mr-2 text-green-600" />
-                    <h2 className="text-2xl font-bold">Equipe Presente</h2>
-                </div>
-                {!isReadOnly && (
-                    <button
-                        onClick={adicionarFuncao}
-                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                        + Adicionar Função
-                    </button>
-                )}
-            </div>
+  const abrirEdicao = (membro: MembroEquipe) => {
+    setEditandoId(membro.id);
+    setEditTemp({
+      nome: membro.nome,
+      funcao: membro.funcao,
+      cpf: membro.cpf,
+      horasTrabalhadas: membro.horasTrabalhadas,
+      status: membro.status,
+      observacao: membro.observacao
+    });
+  };
 
-            {equipe.map((item) => (
-                <div key={item.id} className="border p-4 rounded mb-4 bg-gray-50 relative">
-                    {!isReadOnly && equipe.length > 1 && (
-                        <button
-                            onClick={() => removerFuncao(item.id)}
-                            className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                        >
-                            <X size={20} />
-                        </button>
-                    )}
+  const salvarEdicao = () => {
+    if (!editandoId) return;
+    atualizarMembro(editandoId, {
+      nome: editTemp.nome,
+      funcao: editTemp.funcao,
+      cpf: editTemp.cpf,
+      horasTrabalhadas: editTemp.horasTrabalhadas,
+      status: editTemp.status,
+      observacao: editTemp.observacao
+    });
+    setEditandoId(null);
+  };
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Função */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Função</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.funcao || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <select
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    value={item.funcao}
-                                    onChange={(e) => atualizarEquipe(item.id, 'funcao', e.target.value)}
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="pedreiro">Pedreiro</option>
-                                    <option value="servente">Servente</option>
-                                    <option value="armador">Armador</option>
-                                    <option value="carpinteiro">Carpinteiro</option>
-                                    <option value="eletricista">Eletricista</option>
-                                    <option value="encanador">Encanador</option>
-                                    <option value="pintor">Pintor</option>
-                                    <option value="azulejista">Azulejista</option>
-                                    <option value="mestre">Mestre de Obras</option>
-                                    <option value="outro">Outro</option>
-                                </select>
-                            )}
-                        </div>
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'presente': return <UserCheck className="text-green-600" size={18} />;
+      case 'ausente': return <UserX className="text-red-600" size={18} />;
+      case 'folga': return <Coffee className="text-orange-600" size={18} />;
+      default: return null;
+    }
+  };
 
-                        {/* Quantidade */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Quantidade</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.quantidade || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <input
-                                    type="number"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    placeholder="Ex: 5"
-                                    value={item.quantidade || ''}
-                                    onChange={(e) => atualizarEquipe(item.id, 'quantidade', parseInt(e.target.value) || 0)}
-                                />
-                            )}
-                        </div>
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'presente': return 'bg-green-100 text-green-800';
+      case 'ausente': return 'bg-red-100 text-red-800';
+      case 'folga': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-                        {/* Horas Trabalhadas */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Horas Trabalhadas</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.horasTrabalhadas || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <input
-                                    type="number"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    placeholder="Ex: 8"
-                                    value={item.horasTrabalhadas || ''}
-                                    onChange={(e) => atualizarEquipe(item.id, 'horasTrabalhadas', parseInt(e.target.value) || 0)}
-                                />
-                            )}
-                        </div>
-
-                        {/* Horas Extras */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Horas Extras</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.horasExtras || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <input
-                                    type="number"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    placeholder="Ex: 2"
-                                    value={item.horasExtras || ''}
-                                    onChange={(e) => atualizarEquipe(item.id, 'horasExtras', parseInt(e.target.value) || 0)}
-                                />
-                            )}
-                        </div>
-
-                        {/* Faltas */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Faltas</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.faltas || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <input
-                                    type="number"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    placeholder="Ex: 1"
-                                    value={item.faltas || ''}
-                                    onChange={(e) => atualizarEquipe(item.id, 'faltas', parseInt(e.target.value) || 0)}
-                                />
-                            )}
-                        </div>
-
-                        {/* Nomes dos Faltosos */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Nomes dos Faltosos</label>
-                            {isReadOnly ? (
-                                <div className="p-2 bg-gray-100 rounded border text-gray-700 min-h-[40px]">
-                                    {item.nomesFaltosos || <span className="text-gray-400">Não informado</span>}
-                                </div>
-                            ) : (
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
-                                    placeholder="Opcional"
-                                    value={item.nomesFaltosos}
-                                    onChange={(e) => atualizarEquipe(item.id, 'nomesFaltosos', e.target.value)}
-                                />
-                            )}
-                        </div>
-                    </div>
-                </div>
-            ))}
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md border">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Users className="text-indigo-600" size={28} />
+          <h3 className="text-xl font-bold">Equipe da Fase</h3>
         </div>
-    );
+        {!isReadOnly && (
+          <button
+            onClick={adicionarMembro}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow"
+          >
+            <Plus size={18} />
+            Adicionar Membro
+          </button>
+        )}
+      </div>
+
+      {membros.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <Users size={48} className="mx-auto mb-3 text-gray-300" />
+          <p>Nenhum membro adicionado ainda.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {membros.map(membro => (
+            <div
+              key={membro.id}
+              className={`border rounded-xl p-5 shadow-sm transition-all relative ${
+                editandoId === membro.id
+                  ? 'ring-2 ring-indigo-500 bg-indigo-50'
+                  : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:shadow'
+              }`}
+            >
+              {!isReadOnly && (
+                <div className="absolute top-3 right-3 flex gap-2 z-10">
+                  {editandoId !== membro.id ? (
+                    <button
+                      onClick={() => abrirEdicao(membro)}
+                      className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow"
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={salvarEdicao}
+                      className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow"
+                    >
+                      <Save size={16} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => removerMembro(membro.id)}
+                    className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
+              {editandoId === membro.id ? (
+                <div className="space-y-3">
+                  <div className="flex justify-center mb-3">
+                    <div className="w-20 h-20 bg-gray-200 border-2 border-dashed rounded-full flex items-center justify-center">
+                      <Users className="text-gray-400" size={32} />
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={editTemp.nome}
+                    onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })}
+                    className="w-full p-2 border rounded text-center font-bold"
+                    placeholder="Nome completo"
+                  />
+                  <input
+                    type="text"
+                    value={editTemp.funcao}
+                    onChange={e => setEditTemp({ ...editTemp, funcao: e.target.value })}
+                    className="w-full p-2 border rounded text-center text-sm"
+                    placeholder="Função"
+                  />
+                  <input
+                    type="text"
+                    value={editTemp.cpf}
+                    onChange={e => setEditTemp({ ...editTemp, cpf: e.target.value })}
+                    className="w-full p-2 border rounded text-xs text-center"
+                    placeholder="CPF (opcional)"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Clock className="text-blue-600" size={18} />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={editTemp.horasTrabalhadas}
+                      onChange={e => setEditTemp({ ...editTemp, horasTrabalhadas: Number(e.target.value) })}
+                      className="flex-1 p-2 border rounded text-center font-bold text-blue-600"
+                    />
+                    <span className="text-sm">h</span>
+                  </div>
+                  <select
+                    value={editTemp.status}
+                    onChange={e => setEditTemp({ ...editTemp, status: e.target.value as any })}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="presente">Presente</option>
+                    <option value="ausente">Ausente</option>
+                    <option value="folga">Folga</option>
+                  </select>
+                  <textarea
+                    value={editTemp.observacao}
+                    onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })}
+                    className="w-full p-2 border rounded text-xs"
+                    rows={2}
+                    placeholder="Observação"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <div className="flex flex-col items-center mb-3">
+                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                      {membro.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <p className="font-bold text-gray-800 mt-2">{membro.nome}</p>
+                    <p className="text-sm text-gray-600">{membro.funcao}</p>
+                    {membro.cpf && <p className="text-xs text-gray-500">{membro.cpf}</p>}
+                  </div>
+                  <div className="space-y-2 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="text-blue-600" size={16} />
+                      <span className="font-bold text-blue-600">{membro.horasTrabalhadas}h</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      {getStatusIcon(membro.status)}
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(membro.status)}`}>
+                        {membro.status}
+                      </span>
+                    </div>
+                  </div>
+                  {membro.observacao && (
+                    <p className="text-xs text-gray-500 mt-3 italic text-center">"{membro.observacao}"</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };

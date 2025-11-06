@@ -1,7 +1,6 @@
-import { ServicoItem } from "../components/executed-services/executed-services";
-
 export const ExecutedServices = {
-  async getAll(): Promise<ServicoItem[]> {
+  //Coloque o Array do objeto de serviços aqui
+  async getAll(): Promise<[]> {
     // Exemplo de fetch, ajuste a URL conforme sua API
     const response = await fetch("/api/executed-services", {
       credentials: "include",

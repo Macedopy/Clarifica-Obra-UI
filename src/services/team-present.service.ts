@@ -1,7 +1,6 @@
-import { EquipeItem } from "../components/team-present/team-present";
-
 export const TeamPresentService = {
-    async getAll(): Promise<EquipeItem[]> {
+    //Coloque o Array do objeto da equipe aqui
+    async getAll(): Promise<[]> {
         // Exemplo de fetch, ajuste a URL conforme sua API
         const response = await fetch("/api/team-present", {
             credentials: "include",

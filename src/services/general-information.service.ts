@@ -1,8 +1,6 @@
-import { InformacoesGeraisData } from "../components/general/general-information";
-
 export const GeneralInformationService = {
-    async get(): Promise<InformacoesGeraisData> {
-        // Exemplo de fetch, ajuste a URL conforme sua API
+    async get(): Promise<[]> {
+        //Colocar o objeto de Informações no lugar do []
         const response = await fetch("/api/general-information", {
             credentials: "include",
         });
