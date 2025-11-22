@@ -128,10 +128,10 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
                 onChange={e => setInfo({ ...info, topografia: e.target.value as any })}
                 className="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-cyan-500"
               >
-                <option value="plana">Plana</option>
-                <option value="inclinada">Inclinada</option>
-                <option value="acidentada">Acidentada</option>
-                <option value="com desnível">Com desnível</option>
+                <option value="plano">plano</option>
+                <option value="inclinado">Inclinado</option>
+                <option value="colinoso">Colinoso</option>
+                <option value="montanhoso">Montanhoso</option>
               </select>
             ) : (
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${

@@ -15,41 +15,54 @@ interface MembroEquipe {
 interface EquipeUtilizadaProps {
   isReadOnly?: boolean;
   faseId: string;
+  onEquipeChange?: (equipe: any[]) => void;
 }
 
 export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
   isReadOnly = false,
-  faseId
+  faseId,
+  onEquipeChange,
 }) => {
   const STORAGE_KEY = `equipe-fase-${faseId}`;
   const [membros, setMembros] = useState<MembroEquipe[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [editTemp, setEditTemp] = useState<{
-    nome: string;
-    funcao: string;
-    cpf: string;
-    horasTrabalhadas: number;
-    status: 'presente' | 'ausente' | 'folga';
-    observacao: string;
-  }>({
+
+  const [editTemp, setEditTemp] = useState({
     nome: '',
     funcao: '',
     cpf: '',
     horasTrabalhadas: 0,
-    status: 'presente',
-    observacao: ''
+    status: 'presente' as 'presente' | 'ausente' | 'folga',
+    observacao: '',
   });
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) setMembros(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved) as MembroEquipe[];
+      setMembros(parsed);
+      onEquipeChange?.(parsed.map(mapToDTO));
+    }
   }, [faseId]);
 
   useEffect(() => {
     if (membros.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(membros));
+      onEquipeChange?.(membros.map(mapToDTO));
     }
   }, [membros]);
+
+  const mapToDTO = (m: MembroEquipe) => ({
+    name: m.nome.trim() || 'Membro sem nome',
+    role: m.funcao.trim() || 'Não informado',
+    cpf: m.cpf.trim() || null,
+    hoursWorked: Number(m.horasTrabalhadas) || 0,
+    status:
+      m.status === 'presente' ? 'PRESENT' :
+      m.status === 'ausente' ? 'ABSENT' :
+      'ON_LEAVE',
+    notes: m.observacao.trim() || null,
+  });
 
   const adicionarMembro = () => {
     const novo: MembroEquipe = {
@@ -57,21 +70,21 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
       nome: 'Novo Membro',
       funcao: 'Ajudante',
       cpf: '',
-      horasTrabalhadas: 0,
+      horasTrabalhadas: 8,
       status: 'presente',
       avatar: '',
-      observacao: ''
+      observacao: '',
     };
-    setMembros(prev => [...prev, novo]);
+    setMembros((prev) => [...prev, novo]);
   };
 
   const removerMembro = (id: string) => {
-    setMembros(prev => prev.filter(m => m.id !== id));
+    setMembros((prev) => prev.filter((m) => m.id !== id));
     setEditandoId(null);
   };
 
   const atualizarMembro = (id: string, updates: Partial<MembroEquipe>) => {
-    setMembros(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    setMembros((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
   };
 
   const abrirEdicao = (membro: MembroEquipe) => {
@@ -82,38 +95,37 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
       cpf: membro.cpf,
       horasTrabalhadas: membro.horasTrabalhadas,
       status: membro.status,
-      observacao: membro.observacao
+      observacao: membro.observacao,
     });
   };
 
   const salvarEdicao = () => {
     if (!editandoId) return;
-    atualizarMembro(editandoId, {
-      nome: editTemp.nome,
-      funcao: editTemp.funcao,
-      cpf: editTemp.cpf,
-      horasTrabalhadas: editTemp.horasTrabalhadas,
-      status: editTemp.status,
-      observacao: editTemp.observacao
-    });
+    atualizarMembro(editandoId, editTemp);
     setEditandoId(null);
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: 'presente' | 'ausente' | 'folga') => {
     switch (status) {
-      case 'presente': return <UserCheck className="text-green-600" size={18} />;
-      case 'ausente': return <UserX className="text-red-600" size={18} />;
-      case 'folga': return <Coffee className="text-orange-600" size={18} />;
-      default: return null;
+      case 'presente':
+        return <UserCheck className="text-green-600" size={18} />;
+      case 'ausente':
+        return <UserX className="text-red-600" size={18} />;
+      case 'folga':
+        return <Coffee className="text-orange-600" size={18} />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: 'presente' | 'ausente' | 'folga') => {
     switch (status) {
-      case 'presente': return 'bg-green-100 text-green-800';
-      case 'ausente': return 'bg-red-100 text-red-800';
-      case 'folga': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'presente':
+        return 'bg-green-100 text-green-800';
+      case 'ausente':
+        return 'bg-red-100 text-red-800';
+      case 'folga':
+        return 'bg-orange-100 text-orange-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -142,7 +154,7 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {membros.map(membro => (
+          {membros.map((membro) => (
             <div
               key={membro.id}
               className={`border rounded-xl p-5 shadow-sm transition-all relative ${
@@ -187,21 +199,21 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                   <input
                     type="text"
                     value={editTemp.nome}
-                    onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })}
+                    onChange={(e) => setEditTemp({ ...editTemp, nome: e.target.value })}
                     className="w-full p-2 border rounded text-center font-bold"
                     placeholder="Nome completo"
                   />
                   <input
                     type="text"
                     value={editTemp.funcao}
-                    onChange={e => setEditTemp({ ...editTemp, funcao: e.target.value })}
+                    onChange={(e) => setEditTemp({ ...editTemp, funcao: e.target.value })}
                     className="w-full p-2 border rounded text-center text-sm"
                     placeholder="Função"
                   />
                   <input
                     type="text"
                     value={editTemp.cpf}
-                    onChange={e => setEditTemp({ ...editTemp, cpf: e.target.value })}
+                    onChange={(e) => setEditTemp({ ...editTemp, cpf: e.target.value })}
                     className="w-full p-2 border rounded text-xs text-center"
                     placeholder="CPF (opcional)"
                   />
@@ -212,14 +224,16 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                       min="0"
                       step="0.5"
                       value={editTemp.horasTrabalhadas}
-                      onChange={e => setEditTemp({ ...editTemp, horasTrabalhadas: Number(e.target.value) })}
+                      onChange={(e) => setEditTemp({ ...editTemp, horasTrabalhadas: Number(e.target.value) })}
                       className="flex-1 p-2 border rounded text-center font-bold text-blue-600"
                     />
                     <span className="text-sm">h</span>
                   </div>
                   <select
                     value={editTemp.status}
-                    onChange={e => setEditTemp({ ...editTemp, status: e.target.value as any })}
+                    onChange={(e) =>
+                      setEditTemp({ ...editTemp, status: e.target.value as 'presente' | 'ausente' | 'folga' })
+                    }
                     className="w-full p-2 border rounded"
                   >
                     <option value="presente">Presente</option>
@@ -228,7 +242,7 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                   </select>
                   <textarea
                     value={editTemp.observacao}
-                    onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })}
+                    onChange={(e) => setEditTemp({ ...editTemp, observacao: e.target.value })}
                     className="w-full p-2 border rounded text-xs"
                     rows={2}
                     placeholder="Observação"
@@ -238,7 +252,12 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                 <div>
                   <div className="flex flex-col items-center mb-3">
                     <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                      {membro.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {membro.nome
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
                     </div>
                     <p className="font-bold text-gray-800 mt-2">{membro.nome}</p>
                     <p className="text-sm text-gray-600">{membro.funcao}</p>
@@ -252,7 +271,7 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                     <div className="flex items-center justify-center gap-2">
                       {getStatusIcon(membro.status)}
                       <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(membro.status)}`}>
-                        {membro.status}
+                        {membro.status.charAt(0).toUpperCase() + membro.status.slice(1)}
                       </span>
                     </div>
                   </div>

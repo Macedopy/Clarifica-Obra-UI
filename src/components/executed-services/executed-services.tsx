@@ -7,7 +7,7 @@ interface Servico {
   equipe: string;
   horasPlanejadas: number;
   horasExecutadas: number;
-  status: 'planejado' | 'iniciado' | 'andamento' | 'concluido';
+  status: 'PLANEJADO' | 'INICIADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
   progresso: number;
   observacao: string;
 }
@@ -15,52 +15,61 @@ interface Servico {
 interface ServicosExecutadosProps {
   isReadOnly?: boolean;
   faseId: string;
+  onServicosChange?: (servicos: any[]) => void;
 }
 
 export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   isReadOnly = false,
-  faseId
+  faseId,
+  onServicosChange
 }) => {
   const STORAGE_KEY = `servicos-fase-${faseId}`;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [editTemp, setEditTemp] = useState<{
-    nome: string;
-    equipe: string;
-    horasPlanejadas: number;
-    horasExecutadas: number;
-    status: 'planejado' | 'iniciado' | 'andamento' | 'concluido';
-    progresso: number;
-    observacao: string;
-  }>({
+  const [editTemp, setEditTemp] = useState<Servico>({
+    id: '',
     nome: '',
     equipe: '',
     horasPlanejadas: 8,
     horasExecutadas: 0,
-    status: 'planejado',
+    status: 'PLANEJADO',
     progresso: 0,
     observacao: ''
   });
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) setServicos(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setServicos(parsed);
+      onServicosChange?.(parsed.map(mapToDTO));
+    }
   }, [faseId]);
 
   useEffect(() => {
     if (servicos.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(servicos));
+      onServicosChange?.(servicos.map(mapToDTO));
     }
   }, [servicos]);
+
+  const mapToDTO = (s: Servico) => ({
+    name: s.nome.trim() || "Serviço sem nome",
+    team: s.equipe.trim() || "Equipe Principal",
+    plannedHours: s.horasPlanejadas > 0 ? s.horasPlanejadas : 8,
+    executedHours: s.horasExecutadas >= 0 ? s.horasExecutadas : 0,
+    status: s.status,
+    notes: s.observacao.trim() || null
+  });
 
   const adicionarServico = () => {
     const novo: Servico = {
       id: Date.now().toString(),
-      nome: 'Novo Serviço',
-      equipe: 'Equipe Principal',
-      horasPlanejadas: 8,
+      nome: 'Concretagem',
+      equipe: 'Equipe de Fundação',
+      horasPlanejadas: 24,
       horasExecutadas: 0,
-      status: 'planejado',
+      status: 'PLANEJADO',
       progresso: 0,
       observacao: ''
     };
@@ -73,61 +82,50 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   };
 
   const atualizarServico = (id: string, updates: Partial<Servico>) => {
-    setServicos(prev =>
-      prev.map(s =>
-        s.id === id
-          ? {
-              ...s,
-              ...updates,
-              progresso: Math.round((updates.horasExecutadas || s.horasExecutadas) / s.horasPlanejadas * 100)
-            }
-          : s
-      )
-    );
+    setServicos(prev => prev.map(s => {
+      if (s.id !== id) return s;
+      const novo = { ...s, ...updates };
+      const exec = updates.horasExecutadas ?? s.horasExecutadas;
+      novo.progresso = novo.horasPlanejadas > 0 
+        ? Math.min(100, Math.round((exec / novo.horasPlanejadas) * 100))
+        : 0;
+
+      if (novo.progresso >= 100) novo.status = 'CONCLUIDO';
+      else if (exec > 0 && exec < novo.horasPlanejadas) novo.status = 'EM_ANDAMENTO';
+      else if (exec > 0) novo.status = 'INICIADO';
+      else novo.status = 'PLANEJADO';
+
+      return novo;
+    }));
   };
 
   const abrirEdicao = (servico: Servico) => {
     setEditandoId(servico.id);
-    setEditTemp({
-      nome: servico.nome,
-      equipe: servico.equipe,
-      horasPlanejadas: servico.horasPlanejadas,
-      horasExecutadas: servico.horasExecutadas,
-      status: servico.status,
-      progresso: servico.progresso,
-      observacao: servico.observacao
-    });
+    setEditTemp({ ...servico });
   };
 
   const salvarEdicao = () => {
     if (!editandoId) return;
-    atualizarServico(editandoId, {
-      nome: editTemp.nome,
-      equipe: editTemp.equipe,
-      horasPlanejadas: editTemp.horasPlanejadas,
-      horasExecutadas: editTemp.horasExecutadas,
-      status: editTemp.status,
-      observacao: editTemp.observacao
-    });
+    atualizarServico(editandoId, editTemp);
     setEditandoId(null);
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'planejado': return <Play className="text-gray-500" size={16} />;
-      case 'iniciado': return <Play className="text-blue-600" size={16} />;
-      case 'andamento': return <Pause className="text-yellow-600" size={16} />;
-      case 'concluido': return <CheckCircle className="text-green-600" size={16} />;
+      case 'PLANEJADO': return <Play className="text-gray-500" size={16} />;
+      case 'INICIADO': return <Play className="text-blue-600" size={16} />;
+      case 'EM_ANDAMENTO': return <Pause className="text-yellow-600" size={16} />;
+      case 'CONCLUIDO': return <CheckCircle className="text-green-600" size={16} />;
       default: return null;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planejado': return 'bg-gray-100 text-gray-700';
-      case 'iniciado': return 'bg-blue-100 text-blue-700';
-      case 'andamento': return 'bg-yellow-100 text-yellow-700';
-      case 'concluido': return 'bg-green-100 text-green-700';
+      case 'PLANEJADO': return 'bg-gray-100 text-gray-700';
+      case 'INICIADO': return 'bg-blue-100 text-blue-700';
+      case 'EM_ANDAMENTO': return 'bg-yellow-100 text-yellow-700';
+      case 'CONCLUIDO': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100';
     }
   };
@@ -140,12 +138,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
           <h3 className="text-xl font-bold">Serviços Executados</h3>
         </div>
         {!isReadOnly && (
-          <button
-            onClick={adicionarServico}
-            className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow"
-          >
-            <Plus size={18} />
-            Adicionar Serviço
+          <button onClick={adicionarServico} className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow">
+            <Plus size={18} /> Adicionar Serviço
           </button>
         )}
       </div>
@@ -158,122 +152,39 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
       ) : (
         <div className="space-y-4">
           {servicos.map(servico => (
-            <div
-              key={servico.id}
-              className={`border rounded-xl p-5 shadow-sm transition-all relative ${
-                editandoId === servico.id
-                  ? 'ring-2 ring-orange-500 bg-orange-50'
-                  : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:shadow'
-              }`}
-            >
+            <div key={servico.id} className={`border rounded-xl p-5 shadow-sm transition-all relative ${editandoId === servico.id ? 'ring-2 ring-orange-500 bg-orange-50' : 'bg-gradient-to-r from-gray-50 to-gray-100 hover:shadow'}`}>
               {!isReadOnly && (
                 <div className="absolute top-3 right-3 flex gap-2 z-10">
                   {editandoId !== servico.id ? (
-                    <button
-                      onClick={() => abrirEdicao(servico)}
-                      className="p-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 shadow"
-                    >
-                      <Edit3 size={16} />
-                    </button>
+                    <button onClick={() => abrirEdicao(servico)} className="p-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 shadow"><Edit3 size={16} /></button>
                   ) : (
-                    <button
-                      onClick={salvarEdicao}
-                      className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow"
-                    >
-                      <Save size={16} />
-                    </button>
+                    <button onClick={salvarEdicao} className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow"><Save size={16} /></button>
                   )}
-                  <button
-                    onClick={() => removerServico(servico.id)}
-                    className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow"
-                  >
-                    <X size={16} />
-                  </button>
+                  <button onClick={() => removerServico(servico.id)} className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow"><X size={16} /></button>
                 </div>
               )}
 
               {editandoId === servico.id ? (
                 <div className="space-y-4">
-                  <input
-                    type="text"
-                    value={editTemp.nome}
-                    onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })}
-                    className="w-full p-2 border rounded font-bold text-lg"
-                    placeholder="Ex: Concretagem de laje"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Equipe</label>
-                      <input
-                        type="text"
-                        value={editTemp.equipe}
-                        onChange={e => setEditTemp({ ...editTemp, equipe: e.target.value })}
-                        className="w-full p-2 border rounded"
-                        placeholder="Ex: Equipe A"
-                      />
-                    </div>
+                  <input type="text" value={editTemp.nome} onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })} className="w-full p-2 border rounded font-bold text-lg" placeholder="Nome do serviço" />
+                  <input type="text" value={editTemp.equipe} onChange={e => setEditTemp({ ...editTemp, equipe: e.target.value })} className="w-full p-2 border rounded" placeholder="Equipe responsável" />
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Horas Planejadas</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={editTemp.horasPlanejadas}
-                        onChange={e => setEditTemp({ ...editTemp, horasPlanejadas: Number(e.target.value) })}
-                        className="w-full p-2 border rounded"
-                      />
+                      <input type="number" min="1" step="0.5" value={editTemp.horasPlanejadas} onChange={e => setEditTemp({ ...editTemp, horasPlanejadas: Number(e.target.value) || 8 })} className="w-full p-2 border rounded" />
                     </div>
-                  </div>
-
-                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium mb-1">Horas Executadas</label>
-                      <div className="flex items-center gap-3">
-                        <Clock className="text-blue-600" size={20} />
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={editTemp.horasExecutadas}
-                          onChange={e => setEditTemp({ ...editTemp, horasExecutadas: Number(e.target.value) })}
-                          className="flex-1 p-2 border rounded text-center font-bold text-blue-600"
-                        />
-                        <span className="text-sm">h</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Status</label>
-                      <select
-                        value={editTemp.status}
-                        onChange={e => setEditTemp({ ...editTemp, status: e.target.value as any })}
-                        className="w-full p-2 border rounded"
-                      >
-                        <option value="planejado">Planejado</option>
-                        <option value="iniciado">Iniciado</option>
-                        <option value="andamento">Em Andamento</option>
-                        <option value="concluido">Concluído</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Progresso</label>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-orange-600 h-3 rounded-full transition-all"
-                          style={{ width: `${editTemp.progresso}%` }}
-                        />
-                      </div>
-                      <p className="text-right text-sm font-medium mt-1">{editTemp.progresso}%</p>
+                      <input type="number" min="0" step="0.5" value={editTemp.horasExecutadas} onChange={e => setEditTemp({ ...editTemp, horasExecutadas: Number(e.target.value) || 0 })} className="w-full p-2 border rounded" />
                     </div>
                   </div>
-
-                  <textarea
-                    value={editTemp.observacao}
-                    onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })}
-                    className="w-full p-2 border rounded text-sm"
-                    rows={2}
-                    placeholder="Observações do serviço"
-                  />
+                  <select value={editTemp.status} onChange={e => setEditTemp({ ...editTemp, status: e.target.value as any })} className="w-full p-2 border rounded">
+                    <option value="PLANEJADO">Planejado</option>
+                    <option value="INICIADO">Iniciado</option>
+                    <option value="EM_ANDAMENTO">Em Andamento</option>
+                    <option value="CONCLUIDO">Concluído</option>
+                  </select>
+                  <textarea value={editTemp.observacao} onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })} className="w-full p-2 border rounded text-sm" rows={2} placeholder="Observações" />
                 </div>
               ) : (
                 <div>
@@ -282,42 +193,18 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <p className="font-bold text-gray-800 text-lg">{servico.nome}</p>
                       <p className="text-sm text-gray-600">{servico.equipe}</p>
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end">
-                        {getStatusIcon(servico.status)}
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(servico.status)}`}>
-                          {servico.status}
-                        </span>
-                      </div>
-                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(servico.status)} flex items-center gap-1`}>
+                      {getStatusIcon(servico.status)}
+                      {servico.status === 'EM_ANDAMENTO' ? 'Em Andamento' : servico.status}
+                    </span>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-3 text-center text-sm mb-3">
-                    <div className="bg-blue-50 p-2 rounded">
-                      <Clock className="mx-auto mb-1 text-blue-600" size={16} />
-                      <p className="text-xs text-gray-600">Executadas</p>
-                      <p className="font-bold text-blue-700">{servico.horasExecutadas}h</p>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Planejadas</p>
-                      <p className="font-bold text-gray-700">{servico.horasPlanejadas}h</p>
-                    </div>
-                    <div className="bg-orange-50 p-2 rounded">
-                      <p className="text-xs text-gray-600">Progresso</p>
-                      <p className="font-bold text-orange-700">{servico.progresso}%</p>
-                    </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {servico.horasExecutadas}h de {servico.horasPlanejadas}h ({servico.progresso}%)
                   </div>
-
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-orange-600 h-2 rounded-full transition-all"
-                      style={{ width: `${servico.progresso}%` }}
-                    />
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-orange-600 h-3 rounded-full transition-all" style={{ width: `${servico.progresso}%` }} />
                   </div>
-
-                  {servico.observacao && (
-                    <p className="text-xs text-gray-500 mt-3 italic">"{servico.observacao}"</p>
-                  )}
+                  {servico.observacao && <p className="text-xs text-gray-500 mt-2 italic">"{servico.observacao}"</p>}
                 </div>
               )}
             </div>
