@@ -3,82 +3,66 @@ import { Wrench, X, Plus, Edit3, Save, Clock, Play, Pause, CheckCircle } from 'l
 
 interface Servico {
   id: string;
-  nome: string;
-  equipe: string;
-  horasPlanejadas: number;
-  horasExecutadas: number;
+  name: string;
+  team: string;
+  plannedHours: number;
+  executedHours: number;
   status: 'planejado' | 'iniciado' | 'andamento' | 'concluido';
-  progresso: number;
-  observacao: string;
+  progress: number;
+  notes: string;
 }
 
 interface ServicosExecutadosProps {
   isReadOnly?: boolean;
   faseId: string;
-
 }
 
 export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   isReadOnly = false,
   faseId
-
 }) => {
   const STORAGE_KEY = `servicos-fase-${faseId}`;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editTemp, setEditTemp] = useState<{
-    nome: string;
-    equipe: string;
-    horasPlanejadas: number;
-    horasExecutadas: number;
+    name: string;
+    team: string;
+    plannedHours: number;
+    executedHours: number;
     status: 'planejado' | 'iniciado' | 'andamento' | 'concluido';
-    progresso: number;
-    observacao: string;
+    progress: number;
+    notes: string;
   }>({
-    nome: '',
-    equipe: '',
-    horasPlanejadas: 8,
-    horasExecutadas: 0,
+    name: '',
+    team: '',
+    plannedHours: 8,
+    executedHours: 0,
     status: 'planejado',
-    progresso: 0,
-    observacao: ''
+    progress: 0,
+    notes: ''
   });
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) setServicos(JSON.parse(saved));
-
-
-
-
   }, [faseId]);
 
   useEffect(() => {
     if (servicos.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(servicos));
-
     }
   }, [servicos]);
-
-
-
-
-
-
-
-
-
 
   const adicionarServico = () => {
     const novo: Servico = {
       id: Date.now().toString(),
-      nome: 'Novo Serviço',
-      equipe: 'Equipe Principal',
-      horasPlanejadas: 8,
-      horasExecutadas: 0,
+      name: 'Novo Serviço',
+      team: 'Equipe Principal',
+      plannedHours: 8,
+      executedHours: 0,
       status: 'planejado',
-      progresso: 0,
-      observacao: ''
+      progress: 0,
+      notes: ''
     };
     setServicos(prev => [...prev, novo]);
   };
@@ -95,39 +79,36 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
           ? {
               ...s,
               ...updates,
-              progresso: Math.round((updates.horasExecutadas || s.horasExecutadas) / s.horasPlanejadas * 100)
+              progress: Math.round((updates.executedHours || s.executedHours) / (updates.plannedHours || s.plannedHours) * 100) || 0
             }
           : s
       )
     );
-
-
-
-
   };
 
   const abrirEdicao = (servico: Servico) => {
     setEditandoId(servico.id);
     setEditTemp({
-      nome: servico.nome,
-      equipe: servico.equipe,
-      horasPlanejadas: servico.horasPlanejadas,
-      horasExecutadas: servico.horasExecutadas,
+      name: servico.name,
+      team: servico.team,
+      plannedHours: servico.plannedHours,
+      executedHours: servico.executedHours,
       status: servico.status,
-      progresso: servico.progresso,
-      observacao: servico.observacao
+      progress: servico.progress,
+      notes: servico.notes
     });
   };
 
   const salvarEdicao = () => {
     if (!editandoId) return;
     atualizarServico(editandoId, {
-      nome: editTemp.nome,
-      equipe: editTemp.equipe,
-      horasPlanejadas: editTemp.horasPlanejadas,
-      horasExecutadas: editTemp.horasExecutadas,
+      name: editTemp.name,
+      team: editTemp.team,
+      plannedHours: editTemp.plannedHours,
+      executedHours: editTemp.executedHours,
       status: editTemp.status,
-      observacao: editTemp.observacao
+      notes: editTemp.notes,
+      progress: editTemp.progress
     });
     setEditandoId(null);
   };
@@ -216,8 +197,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                 <div className="space-y-4">
                   <input
                     type="text"
-                    value={editTemp.nome}
-                    onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })}
+                    value={editTemp.name}
+                    onChange={e => setEditTemp({ ...editTemp, name: e.target.value })}
                     className="w-full p-2 border rounded font-bold text-lg"
                     placeholder="Ex: Concretagem de laje"
                   />
@@ -226,8 +207,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <label className="block text-sm font-medium mb-1">Equipe</label>
                       <input
                         type="text"
-                        value={editTemp.equipe}
-                        onChange={e => setEditTemp({ ...editTemp, equipe: e.target.value })}
+                        value={editTemp.team}
+                        onChange={e => setEditTemp({ ...editTemp, team: e.target.value })}
                         className="w-full p-2 border rounded"
                         placeholder="Ex: Equipe A"
                       />
@@ -237,8 +218,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <input
                         type="number"
                         min="1"
-                        value={editTemp.horasPlanejadas}
-                        onChange={e => setEditTemp({ ...editTemp, horasPlanejadas: Number(e.target.value) })}
+                        value={editTemp.plannedHours}
+                        onChange={e => setEditTemp({ ...editTemp, plannedHours: Number(e.target.value) })}
                         className="w-full p-2 border rounded"
                       />
                     </div>
@@ -253,8 +234,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                           type="number"
                           min="0"
                           step="0.5"
-                          value={editTemp.horasExecutadas}
-                          onChange={e => setEditTemp({ ...editTemp, horasExecutadas: Number(e.target.value) })}
+                          value={editTemp.executedHours}
+                          onChange={e => setEditTemp({ ...editTemp, executedHours: Number(e.target.value) })}
                           className="flex-1 p-2 border rounded text-center font-bold text-blue-600"
                         />
                         <span className="text-sm">h</span>
@@ -280,16 +261,16 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
                           className="bg-orange-600 h-3 rounded-full transition-all"
-                          style={{ width: `${editTemp.progresso}%` }}
+                          style={{ width: `${editTemp.progress}%` }}
                         />
                       </div>
-                      <p className="text-right text-sm font-medium mt-1">{editTemp.progresso}%</p>
+                      <p className="text-right text-sm font-medium mt-1">{editTemp.progress}%</p>
                     </div>
                   </div>
 
                   <textarea
-                    value={editTemp.observacao}
-                    onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })}
+                    value={editTemp.notes}
+                    onChange={e => setEditTemp({ ...editTemp, notes: e.target.value })}
                     className="w-full p-2 border rounded text-sm"
                     rows={2}
                     placeholder="Observações do serviço"
@@ -299,8 +280,8 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                 <div>
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-bold text-gray-800 text-lg">{servico.nome}</p>
-                      <p className="text-sm text-gray-600">{servico.equipe}</p>
+                      <p className="font-bold text-gray-800 text-lg">{servico.name}</p>
+                      <p className="text-sm text-gray-600">{servico.team}</p>
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-2 justify-end">
@@ -316,27 +297,27 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                     <div className="bg-blue-50 p-2 rounded">
                       <Clock className="mx-auto mb-1 text-blue-600" size={16} />
                       <p className="text-xs text-gray-600">Executadas</p>
-                      <p className="font-bold text-blue-700">{servico.horasExecutadas}h</p>
+                      <p className="font-bold text-blue-700">{servico.executedHours}h</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-600">Planejadas</p>
-                      <p className="font-bold text-gray-700">{servico.horasPlanejadas}h</p>
+                      <p className="font-bold text-gray-700">{servico.plannedHours}h</p>
                     </div>
                     <div className="bg-orange-50 p-2 rounded">
                       <p className="text-xs text-gray-600">Progresso</p>
-                      <p className="font-bold text-orange-700">{servico.progresso}%</p>
+                      <p className="font-bold text-orange-700">{servico.progress}%</p>
                     </div>
                   </div>
 
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-orange-600 h-2 rounded-full transition-all"
-                      style={{ width: `${servico.progresso}%` }}
+                      style={{ width: `${servico.progress}%` }}
                     />
                   </div>
 
-                  {servico.observacao && (
-                    <p className="text-xs text-gray-500 mt-3 italic">"{servico.observacao}"</p>
+                  {servico.notes && (
+                    <p className="text-xs text-gray-500 mt-3 italic">"{servico.notes}"</p>
                   )}
                 </div>
               )}

@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, X, Plus, Edit3, Save, Fuel, Clock, Wrench } from 'lucide-react';
 
-interface MaquinarioItem {
+interface MachineryItem {
     id: string;
-    nome: string;
-    categoria: string;
-    horasTrabalhadas: number;
-    combustivelUsado: number;
-    combustivelUnidade: 'litros' | 'horas';
-    quantidadeTotal: number;
-    emOperacao: number;
-    disponivel: number;
-    emManutencao: number;
-    condicao: 'ótima' | 'boa' | 'ruim' | 'indisponível';
-    observacao: string;
+    name: string;
+    category: string;
+    hoursWorked: number;
+    fuelUsed: number;
+    fuelUnit: 'LITERS' | 'HOURS';
+    totalQuantity: number;
+    inOperation: number;
+    inMaintenance: number;
+    condition: 'GREAT' | 'GOOD' | 'BAD' | 'UNAVAILABLE';
+    notes: string;
 }
 
 interface MaquinariosUtilizadosProps {
@@ -26,30 +25,19 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
     faseId
 }) => {
     const STORAGE_KEY = `maquinarios-fase-${faseId}`;
-    const [maquinarios, setMaquinarios] = useState<MaquinarioItem[]>([]);
+    const [maquinarios, setMaquinarios] = useState<MachineryItem[]>([]);
     const [editandoId, setEditandoId] = useState<string | null>(null);
-    const [editTemp, setEditTemp] = useState<{
-        nome: string;
-        categoria: string;
-        horasTrabalhadas: number;
-        combustivelUsado: number;
-        combustivelUnidade: 'litros' | 'horas';
-        quantidadeTotal: number;
-        emOperacao: number;
-        emManutencao: number;
-        condicao: 'ótima' | 'boa' | 'ruim' | 'indisponível';
-        observacao: string;
-    }>({
-        nome: '',
-        categoria: 'Pesado',
-        horasTrabalhadas: 0,
-        combustivelUsado: 0,
-        combustivelUnidade: 'litros',
-        quantidadeTotal: 1,
-        emOperacao: 0,
-        emManutencao: 0,
-        condicao: 'boa',
-        observacao: ''
+    const [editTemp, setEditTemp] = useState<Omit<MachineryItem, 'id'>>({
+        name: '',
+        category: 'Pesado',
+        hoursWorked: 0,
+        fuelUsed: 0,
+        fuelUnit: 'LITERS',
+        totalQuantity: 1,
+        inOperation: 0,
+        inMaintenance: 0,
+        condition: 'GOOD',
+        notes: ''
     });
 
     useEffect(() => {
@@ -64,19 +52,18 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
     }, [maquinarios]);
 
     const adicionarMaquinario = () => {
-        const novo: MaquinarioItem = {
+        const novo: MachineryItem = {
             id: Date.now().toString(),
-            nome: 'Nova Máquina',
-            categoria: 'Pesado',
-            horasTrabalhadas: 0,
-            combustivelUsado: 0,
-            combustivelUnidade: 'litros',
-            quantidadeTotal: 1,
-            emOperacao: 0,
-            disponivel: 1,
-            emManutencao: 0,
-            condicao: 'boa',
-            observacao: ''
+            name: 'Nova Máquina',
+            category: 'Pesado',
+            hoursWorked: 0,
+            fuelUsed: 0,
+            fuelUnit: 'LITERS',
+            totalQuantity: 1,
+            inOperation: 0,
+            inMaintenance: 0,
+            condition: 'GOOD',
+            notes: ''
         };
         setMaquinarios(prev => [...prev, novo]);
     };
@@ -86,74 +73,75 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
         setEditandoId(null);
     };
 
-    const atualizarMaquinario = (id: string, updates: Partial<MaquinarioItem>) => {
+    const atualizarMaquinario = (id: string, updates: Partial<MachineryItem>) => {
         setMaquinarios(prev =>
             prev.map(m =>
                 m.id === id
-                    ? { ...m, ...updates, disponivel: m.quantidadeTotal - m.emOperacao - m.emManutencao }
+                    ? { ...m, ...updates }
                     : m
             )
         );
     };
 
-    const abrirEdicao = (maquinario: MaquinarioItem) => {
+    const abrirEdicao = (maquinario: MachineryItem) => {
         setEditandoId(maquinario.id);
         setEditTemp({
-            nome: maquinario.nome,
-            categoria: maquinario.categoria,
-            horasTrabalhadas: maquinario.horasTrabalhadas,
-            combustivelUsado: maquinario.combustivelUsado,
-            combustivelUnidade: maquinario.combustivelUnidade,
-            quantidadeTotal: maquinario.quantidadeTotal,
-            emOperacao: maquinario.emOperacao,
-            emManutencao: maquinario.emManutencao,
-            condicao: maquinario.condicao,
-            observacao: maquinario.observacao
+            name: maquinario.name,
+            category: maquinario.category,
+            hoursWorked: maquinario.hoursWorked,
+            fuelUsed: maquinario.fuelUsed,
+            fuelUnit: maquinario.fuelUnit,
+            totalQuantity: maquinario.totalQuantity,
+            inOperation: maquinario.inOperation,
+            inMaintenance: maquinario.inMaintenance,
+            condition: maquinario.condition,
+            notes: maquinario.notes
         });
     };
 
     const salvarEdicao = () => {
         if (!editandoId) return;
-        atualizarMaquinario(editandoId, {
-            nome: editTemp.nome,
-            categoria: editTemp.categoria,
-            horasTrabalhadas: editTemp.horasTrabalhadas,
-            combustivelUsado: editTemp.combustivelUsado,
-            combustivelUnidade: editTemp.combustivelUnidade,
-            quantidadeTotal: editTemp.quantidadeTotal,
-            emOperacao: editTemp.emOperacao,
-            emManutencao: editTemp.emManutencao,
-            condicao: editTemp.condicao,
-            observacao: editTemp.observacao
-        });
+        atualizarMaquinario(editandoId, editTemp);
         setEditandoId(null);
     };
 
     const operar = () => {
-        if (editTemp.emOperacao >= editTemp.quantidadeTotal - editTemp.emManutencao) return;
+        if (editTemp.inOperation >= editTemp.totalQuantity - editTemp.inMaintenance) return;
         setEditTemp(prev => ({
             ...prev,
-            emOperacao: prev.emOperacao + 1,
-            horasTrabalhadas: prev.horasTrabalhadas + 1
+            inOperation: prev.inOperation + 1,
+            hoursWorked: prev.hoursWorked + 1
         }));
     };
 
     const parar = () => {
-        if (editTemp.emOperacao <= 0) return;
-        setEditTemp(prev => ({ ...prev, emOperacao: prev.emOperacao - 1 }));
+        if (editTemp.inOperation <= 0) return;
+        setEditTemp(prev => ({ ...prev, inOperation: prev.inOperation - 1 }));
     };
 
     const enviarManutencao = () => {
-        if (editTemp.emManutencao >= editTemp.quantidadeTotal - editTemp.emOperacao) return;
-        setEditTemp(prev => ({ ...prev, emManutencao: prev.emManutencao + 1 }));
+        if (editTemp.inMaintenance >= editTemp.totalQuantity - editTemp.inOperation) return;
+        setEditTemp(prev => ({ ...prev, inMaintenance: prev.inMaintenance + 1 }));
     };
 
     const retornarManutencao = () => {
-        if (editTemp.emManutencao <= 0) return;
-        setEditTemp(prev => ({ ...prev, emManutencao: prev.emManutencao - 1 }));
+        if (editTemp.inMaintenance <= 0) return;
+        setEditTemp(prev => ({ ...prev, inMaintenance: prev.inMaintenance - 1 }));
     };
 
-    const disponivel = editTemp.quantidadeTotal - editTemp.emOperacao - editTemp.emManutencao;
+    const getDisponivel = (item: Pick<MachineryItem, 'totalQuantity' | 'inOperation' | 'inMaintenance'>) => {
+        return item.totalQuantity - item.inOperation - item.inMaintenance;
+    };
+
+    const getConditionLabel = (condition: string) => {
+        switch (condition) {
+            case 'GREAT': return 'Ótima';
+            case 'GOOD': return 'Boa';
+            case 'BAD': return 'Ruim';
+            case 'UNAVAILABLE': return 'Indisponível';
+            default: return condition;
+        }
+    };
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md border">
@@ -221,8 +209,8 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                             <label className="block text-sm font-medium mb-1">Nome</label>
                                             <input
                                                 type="text"
-                                                value={editTemp.nome}
-                                                onChange={e => setEditTemp({ ...editTemp, nome: e.target.value })}
+                                                value={editTemp.name}
+                                                onChange={e => setEditTemp({ ...editTemp, name: e.target.value })}
                                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-teal-500"
                                                 placeholder="Ex: Retroescavadeira JCB"
                                             />
@@ -230,8 +218,8 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Categoria</label>
                                             <select
-                                                value={editTemp.categoria}
-                                                onChange={e => setEditTemp({ ...editTemp, categoria: e.target.value })}
+                                                value={editTemp.category}
+                                                onChange={e => setEditTemp({ ...editTemp, category: e.target.value })}
                                                 className="w-full p-2 border rounded"
                                             >
                                                 <option>Pesado</option>
@@ -246,27 +234,27 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                             <input
                                                 type="number"
                                                 min="1"
-                                                value={editTemp.quantidadeTotal}
-                                                onChange={e => setEditTemp({ ...editTemp, quantidadeTotal: Number(e.target.value) })}
+                                                value={editTemp.totalQuantity}
+                                                onChange={e => setEditTemp({ ...editTemp, totalQuantity: Number(e.target.value) })}
                                                 className="w-full p-2 border rounded"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Condição</label>
                                             <select
-                                                value={editTemp.condicao}
+                                                value={editTemp.condition}
                                                 onChange={e =>
                                                     setEditTemp({
                                                         ...editTemp,
-                                                        condicao: e.target.value as 'ótima' | 'boa' | 'ruim' | 'indisponível'
+                                                        condition: e.target.value as any
                                                     })
                                                 }
                                                 className="w-full p-2 border rounded"
                                             >
-                                                <option value="ótima">Ótima</option>
-                                                <option value="boa">Boa</option>
-                                                <option value="ruim">Ruim</option>
-                                                <option value="indisponível">Indisponível</option>
+                                                <option value="GREAT">Ótima</option>
+                                                <option value="GOOD">Boa</option>
+                                                <option value="BAD">Ruim</option>
+                                                <option value="UNAVAILABLE">Indisponível</option>
                                             </select>
                                         </div>
                                     </div>
@@ -279,8 +267,8 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                                 type="number"
                                                 min="0"
                                                 step="0.5"
-                                                value={editTemp.horasTrabalhadas}
-                                                onChange={e => setEditTemp({ ...editTemp, horasTrabalhadas: Number(e.target.value) })}
+                                                value={editTemp.hoursWorked}
+                                                onChange={e => setEditTemp({ ...editTemp, hoursWorked: Number(e.target.value) })}
                                                 className="w-full text-center text-2xl font-bold text-blue-600 bg-transparent border-b-2 border-blue-300 focus:border-blue-600 outline-none"
                                             />
                                         </div>
@@ -292,34 +280,34 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                                     type="number"
                                                     min="0"
                                                     step="0.1"
-                                                    value={editTemp.combustivelUsado}
-                                                    onChange={e => setEditTemp({ ...editTemp, combustivelUsado: Number(e.target.value) })}
+                                                    value={editTemp.fuelUsed}
+                                                    onChange={e => setEditTemp({ ...editTemp, fuelUsed: Number(e.target.value) })}
                                                     className="w-20 text-center text-xl font-bold text-orange-600 bg-transparent border-b-2 border-orange-300 focus:border-orange-600 outline-none"
                                                 />
                                                 <select
-                                                    value={editTemp.combustivelUnidade}
-                                                    onChange={e => setEditTemp({ ...editTemp, combustivelUnidade: e.target.value as 'litros' | 'horas' })}
+                                                    value={editTemp.fuelUnit}
+                                                    onChange={e => setEditTemp({ ...editTemp, fuelUnit: e.target.value as 'LITERS' | 'HOURS' })}
                                                     className="text-xs p-1 border rounded bg-white"
                                                 >
-                                                    <option value="litros">Litros</option>
-                                                    <option value="horas">Horas</option>
+                                                    <option value="LITERS">L</option>
+                                                    <option value="HOURS">H</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div className="text-center">
                                             <p className="text-xs text-gray-600">Em Operação</p>
-                                            <p className="text-2xl font-bold text-purple-600">{editTemp.emOperacao}</p>
+                                            <p className="text-2xl font-bold text-purple-600">{editTemp.inOperation}</p>
                                             <div className="flex gap-1 mt-2">
                                                 <button
                                                     onClick={operar}
-                                                    disabled={editTemp.emOperacao >= editTemp.quantidadeTotal - editTemp.emManutencao}
+                                                    disabled={editTemp.inOperation >= editTemp.totalQuantity - editTemp.inMaintenance}
                                                     className="flex-1 bg-purple-500 text-white text-xs py-1 rounded hover:bg-purple-600 disabled:opacity-50"
                                                 >
                                                     Ligar
                                                 </button>
                                                 <button
                                                     onClick={parar}
-                                                    disabled={editTemp.emOperacao <= 0}
+                                                    disabled={editTemp.inOperation <= 0}
                                                     className="flex-1 bg-gray-500 text-white text-xs py-1 rounded hover:bg-gray-600 disabled:opacity-50"
                                                 >
                                                     Parar
@@ -328,18 +316,18 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                         </div>
                                         <div className="text-center">
                                             <p className="text-xs text-gray-600">Manutenção</p>
-                                            <p className="text-2xl font-bold text-orange-600">{editTemp.emManutencao}</p>
+                                            <p className="text-2xl font-bold text-orange-600">{editTemp.inMaintenance}</p>
                                             <div className="flex gap-1 mt-2">
                                                 <button
                                                     onClick={enviarManutencao}
-                                                    disabled={editTemp.emManutencao >= editTemp.quantidadeTotal - editTemp.emOperacao}
+                                                    disabled={editTemp.inMaintenance >= editTemp.totalQuantity - editTemp.inOperation}
                                                     className="flex-1 bg-orange-500 text-white text-xs py-1 rounded hover:bg-orange-600 disabled:opacity-50"
                                                 >
                                                     Enviar
                                                 </button>
                                                 <button
                                                     onClick={retornarManutencao}
-                                                    disabled={editTemp.emManutencao <= 0}
+                                                    disabled={editTemp.inMaintenance <= 0}
                                                     className="flex-1 bg-teal-500 text-white text-xs py-1 rounded hover:bg-teal-600 disabled:opacity-50"
                                                 >
                                                     Retornar
@@ -351,24 +339,24 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                     <div className="grid grid-cols-3 gap-3 text-center pt-3 border-t">
                                         <div className="bg-green-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Disponível</p>
-                                            <p className="font-bold text-green-700">{disponivel}</p>
+                                            <p className="font-bold text-green-700">{getDisponivel(editTemp)}</p>
                                         </div>
                                         <div className="bg-blue-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Total</p>
-                                            <p className="font-bold text-blue-700">{editTemp.quantidadeTotal}</p>
+                                            <p className="font-bold text-blue-700">{editTemp.totalQuantity}</p>
                                         </div>
                                         <div className="bg-gray-50 p-2 rounded">
                                             <Wrench className="mx-auto text-gray-600 mb-1" size={16} />
                                             <p className="text-xs text-gray-600">Condição</p>
-                                            <p className="font-bold text-gray-700">{editTemp.condicao}</p>
+                                            <p className="font-bold text-gray-700">{getConditionLabel(editTemp.condition)}</p>
                                         </div>
                                     </div>
 
                                     <div className="pt-4">
                                         <label className="block text-sm font-medium mb-1">Observação</label>
                                         <textarea
-                                            value={editTemp.observacao}
-                                            onChange={e => setEditTemp({ ...editTemp, observacao: e.target.value })}
+                                            value={editTemp.notes}
+                                            onChange={e => setEditTemp({ ...editTemp, notes: e.target.value })}
                                             className="w-full p-2 border rounded"
                                             rows={2}
                                             placeholder="Ex: Filtro de ar sujo"
@@ -379,18 +367,18 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <p className="font-bold text-gray-800">{maquinario.nome}</p>
-                                            <p className="text-sm text-gray-600">{maquinario.categoria}</p>
+                                            <p className="font-bold text-gray-800">{maquinario.name}</p>
+                                            <p className="text-sm text-gray-600">{maquinario.category}</p>
                                         </div>
                                         <div className="text-right">
                                             <div className="flex items-center gap-2 justify-end">
                                                 <Clock className="text-blue-600" size={16} />
-                                                <span className="text-sm font-medium">{maquinario.horasTrabalhadas}h</span>
+                                                <span className="text-sm font-medium">{maquinario.hoursWorked}h</span>
                                             </div>
                                             <div className="flex items-center gap-2 justify-end mt-1">
                                                 <Fuel className="text-orange-600" size={16} />
                                                 <span className="text-sm font-medium">
-                                                    {maquinario.combustivelUsado} {maquinario.combustivelUnidade === 'litros' ? 'L' : 'h'}
+                                                    {maquinario.fuelUsed} {maquinario.fuelUnit === 'LITERS' ? 'L' : 'h'}
                                                 </span>
                                             </div>
                                         </div>
@@ -398,23 +386,23 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
                                     <div className="grid grid-cols-4 gap-2 text-center text-sm">
                                         <div className="bg-purple-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Operação</p>
-                                            <p className="font-bold text-purple-700">{maquinario.emOperacao}</p>
+                                            <p className="font-bold text-purple-700">{maquinario.inOperation}</p>
                                         </div>
                                         <div className="bg-green-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Disponível</p>
-                                            <p className="font-bold text-green-700">{maquinario.disponivel}</p>
+                                            <p className="font-bold text-green-700">{getDisponivel(maquinario)}</p>
                                         </div>
                                         <div className="bg-orange-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Manutenção</p>
-                                            <p className="font-bold text-orange-700">{maquinario.emManutencao}</p>
+                                            <p className="font-bold text-orange-700">{maquinario.inMaintenance}</p>
                                         </div>
                                         <div className="bg-gray-50 p-2 rounded">
                                             <p className="text-xs text-gray-600">Total</p>
-                                            <p className="font-bold text-gray-700">{maquinario.quantidadeTotal}</p>
+                                            <p className="font-bold text-gray-700">{maquinario.totalQuantity}</p>
                                         </div>
                                     </div>
-                                    {maquinario.observacao && (
-                                        <p className="text-xs text-gray-500 mt-2 italic">"{maquinario.observacao}"</p>
+                                    {maquinario.notes && (
+                                        <p className="text-xs text-gray-500 mt-2 italic">"{maquinario.notes}"</p>
                                     )}
                                 </div>
                             )}
