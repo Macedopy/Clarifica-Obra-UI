@@ -17,7 +17,7 @@ export const FaseInstalacoesHidraulicas = () => {
   const handleSave = async (dados: any) => {
     const payload = { phaseName: "Instalações Hidráulicas", contractor: "Construtora Clarifica", ...dados };
     try {
-      const res = await fetch("http://localhost:8080/plumbing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch("http://localhost:8080/hydraulic", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       alert(res.ok ? "Relatório Hidráulico enviado!" : "Erro");
     } catch { alert("Falha na conexão"); }
   };
