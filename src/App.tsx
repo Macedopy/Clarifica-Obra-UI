@@ -1,8 +1,7 @@
-// src/App.tsx
 import React from "react";
 import { PhasesBreadcrumb } from "./components/PhasesBreadcrumb";
+import Login from "./components/Login";
 
-// === IMPORTAÇÃO DAS 10 FASES ===
 import { FasePreparacaoTerreno } from "./phases/FasePreparacaoTerreno";
 import { FaseFundacao } from "./phases/FaseFundacao";
 import { FaseEstrutura } from "./phases/FaseEstrutura";
@@ -14,6 +13,7 @@ import { FaseRevestimentos } from "./phases/FaseRevestimentos";
 import { FaseAcabamentos } from "./phases/FaseAcabamentos";
 import { ObraProvider } from "./contexts/ObraContext";
 import { usePhaseNavigation, PhasesProvider } from "./contexts/PhasesContext";
+import { UserTypeProvider, useUserType } from "./contexts/UserTypeContext";
 
 const phaseComponents: Record<string, React.FC> = {
   preparacao: FasePreparacaoTerreno,
@@ -27,11 +27,18 @@ const phaseComponents: Record<string, React.FC> = {
   acabamentos: FaseAcabamentos,
 };
 
-// === COMPONENTE QUE MOSTRA A FASE ATUAL ===
 const AppContent = () => {
   const { currentPhaseId } = usePhaseNavigation();
+  const { isAuthenticated, loading } = useUserType();
 
-  // Pega o componente correto ou cai na primeira fase
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   const CurrentPhaseComponent = phaseComponents[currentPhaseId] || FasePreparacaoTerreno;
 
   return (
@@ -68,13 +75,14 @@ const AppContent = () => {
   );
 };
 
-// === APP PRINCIPAL (com os dois Providers) ===
 export default function App() {
   return (
-    <ObraProvider>
-      <PhasesProvider>
-        <AppContent />
-      </PhasesProvider>
-    </ObraProvider>
+    <UserTypeProvider>
+      <ObraProvider>
+        <PhasesProvider>
+          <AppContent />
+        </PhasesProvider>
+      </ObraProvider>
+    </UserTypeProvider>
   );
 }

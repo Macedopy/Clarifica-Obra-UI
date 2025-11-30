@@ -2,6 +2,7 @@
 import { Wrench, Users, Truck, Package, Hammer, Camera } from "lucide-react";
 import { PhaseLayout } from "../components/PhaseLayout";
 import { SecaoConteudo } from "../components/SecaoConteudo";
+import { useUserType } from "../contexts/UserTypeContext";
 
 const secoes = [
   { id: "equipe", nome: "Equipe", icon: Users },
@@ -13,10 +14,10 @@ const secoes = [
 ];
 
 export const FaseFundacao = () => {
+  const { customerId } = useUserType();
+
   const handleSave = async (dados: any) => {
     const payload = {
-      phaseName: "Fundação - Bloco Principal",
-      contractor: "Construtora Bruno",
       equipe: dados.equipe || [],
       servicos: dados.servicos || [],
       maquinarios: dados.maquinarios || [],
@@ -32,8 +33,8 @@ export const FaseFundacao = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/foundation", {
-        method: "POST",
+      const res = await fetch(`http://localhost:8080/foundation/${customerId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

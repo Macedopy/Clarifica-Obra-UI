@@ -2,6 +2,7 @@
 import { Package, Users, Wrench, Truck, Hammer, Camera } from "lucide-react";
 import { PhaseLayout } from "../components/PhaseLayout";
 import { SecaoConteudo } from "../components/SecaoConteudo";
+import { useUserType } from "../contexts/UserTypeContext";
 
 const secoes = [
   { id: "equipe", nome: "Equipe", icon: Users },
@@ -13,16 +14,46 @@ const secoes = [
 ];
 
 export const FaseEstrutura = () => {
+  const { customerId } = useUserType();
+
   const handleSave = async (dados: any) => {
-    const payload = { phaseName: "Estrutura - Pilares e Lajes", contractor: "Construtora Clarifica", ...dados };
+    const payload = {
+      equipe: dados.equipe || [],
+      servicos: dados.servicos || [],
+      maquinarios: dados.maquinarios || [],
+      materiais: dados.materiais || [],
+      ferramentas: dados.ferramentas || [],
+      fotos: (dados.fotos || []).map((f: any) => ({
+        id: "",
+        filePath: f.url || "/fotos/default.jpg",
+        caption: f.caption || "Foto da estrutura",
+        category: "PROGRESS",
+        uploadedAt: new Date().toISOString(),
+      })),
+    };
+
     try {
-      const res = await fetch("http://localhost:8080/structure", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      alert(res.ok ? "Relatório da Estrutura enviado!" : "Erro ao enviar");
-    } catch { alert("Falha na conexão"); }
+      const res = await fetch(`http://localhost:8080/structure/${customerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Relatório da Estrutura enviado com sucesso!");
+      } else {
+        alert("Erro ao enviar o relatório. Tente novamente.");
+      }
+    } catch (err) {
+      alert("Falha na conexão com o servidor.");
+    }
   };
 
   return (
-    <PhaseLayout phase={{ id: "estrutura", nome: "Estrutura", icon: Package, secoes }} onSave={handleSave}>
+    <PhaseLayout
+      phase={{ id: "estrutura", nome: "Estrutura", icon: Package, secoes }}
+      onSave={handleSave}
+    >
       <SecaoConteudo secaoId="equipe" faseId="estrutura" />
       <SecaoConteudo secaoId="servicos" faseId="estrutura" />
       <SecaoConteudo secaoId="maquinarios" faseId="estrutura" />

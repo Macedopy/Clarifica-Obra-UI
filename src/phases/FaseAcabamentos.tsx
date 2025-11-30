@@ -1,6 +1,7 @@
 import { Camera, Hammer, Package, Truck, Users, Wrench } from "lucide-react";
 import { PhaseLayout } from "../components/PhaseLayout";
 import { SecaoConteudo } from "../components/SecaoConteudo";
+import { useUserType } from "../contexts/UserTypeContext";
 
 // src/phases/FaseAcabamentos.tsx
 
@@ -14,10 +15,12 @@ const secoes = [
 ];
 
 export const FaseAcabamentos = () => {
+  const { customerId } = useUserType();
+
   const handleSave = async (dados: any) => {
     const payload = { phaseName: "Acabamentos Finais", contractor: "Construtora Clarifica", ...dados };
     try {
-      const res = await fetch("http://localhost:8080/finishing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(`http://localhost:8080/finishing/${customerId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       alert(res.ok ? "Relatório de Acabamentos enviado!" : "Erro");
     } catch { alert("Falha na conexão"); }
   };
