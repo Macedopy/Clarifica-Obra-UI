@@ -33,12 +33,12 @@ export const FaseAcabamentos = () => {
 
   return (
     <PhaseLayout phase={{ id: "acabamentos", nome: "Acabamentos", icon: Package, secoes }} onSave={handleSave} initialData={initialData}>
-      <SecaoConteudo secaoId="equipe" faseId="acabamentos" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="acabamentos" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="acabamentos" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="acabamentos" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="ferramentas" faseId="acabamentos" initialData={initialData?.ferramentas} />
-      <SecaoConteudo secaoId="fotos" faseId="acabamentos" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="acabamentos" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="acabamentos" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="acabamentos" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="acabamentos" initialData={initialData?.materials} />
+      <SecaoConteudo secaoId="ferramentas" faseId="acabamentos" initialData={initialData?.tools} />
+      <SecaoConteudo secaoId="fotos" faseId="acabamentos" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

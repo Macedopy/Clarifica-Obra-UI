@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Package, X, Plus, Edit3, Save, Box } from 'lucide-react';
 
+interface BackendMaterialItem {
+  id: string;
+  phaseId: null;
+  name: string;
+  category: string;
+  consumedQuantity: number;
+  unit: string;
+  currentStock: number;
+  minimumStock: number;
+  needsRestock: boolean;
+  urgency: string;
+}
+
 interface MaterialItem {
   id: string;
   name: string;
   category: string;
-  quantityUsed: number;
+  consumedQuantity: number;
   unit: string;
   currentStock: number;
   minimumStock: number;
@@ -16,7 +29,7 @@ interface MaterialItem {
 interface MateriaisUtilizadosProps {
   isReadOnly?: boolean;
   faseId: string;
-  initialData?: MaterialItem[];
+  initialData?: BackendMaterialItem[];
 }
 
 export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({ 
@@ -35,22 +48,37 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
     minimumStock: number;
     stockToAdd: number;
     consumption: number;
+    urgency: string;
   }>({
     name: '',
     category: '',
     unit: '',
     minimumStock: 0,
     stockToAdd: 0,
-    consumption: 0
+    consumption: 0,
+    urgency: ''
   });
 
   useEffect(() => {
+    let transformedData: MaterialItem[] = [];
     if (initialData && initialData.length > 0) {
-      setMateriais(initialData);
+      transformedData = initialData.map(material => ({
+        id: material.id,
+        name: material.name,
+        category: material.category,
+        consumedQuantity: material.consumedQuantity,
+        unit: material.unit,
+        currentStock: material.currentStock,
+        minimumStock: material.minimumStock,
+        needsRestock: material.needsRestock,
+        urgency: material.urgency
+      }));
+      setMateriais(transformedData);
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        setMateriais(JSON.parse(saved));
+        const parsed = JSON.parse(saved) as MaterialItem[];
+        setMateriais(parsed);
       }
     }
   }, [faseId, initialData]);
@@ -65,12 +93,12 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
     const novo: MaterialItem = {
       id: Date.now().toString(),
       name: 'Novo Material',
-      category: 'OTHER',
-      quantityUsed: 0,
-      unit: 'UNIT',
+      category: 'Outros',
+      consumedQuantity: 0,
+      unit: 'unid',
       currentStock: 0,
       minimumStock: 10,
-      needsRestock: true, // Começa true pois estoque é 0 e min é 10
+      needsRestock: true,
       urgency: ''
     };
     setMateriais(prev => [...prev, novo]);
@@ -95,7 +123,8 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
       unit: material.unit,
       minimumStock: material.minimumStock,
       stockToAdd: 0,
-      consumption: 0
+      consumption: 0,
+      urgency: material.urgency
     });
   };
 
@@ -104,7 +133,6 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
     const material = materiais.find(m => m.id === editandoId);
     if (!material) return;
 
-    // Recalcula necessidade de reposição caso o estoque mínimo tenha mudado
     const shouldRestock = material.currentStock <= editTemp.minimumStock;
 
     atualizarMaterial(editandoId, {
@@ -112,7 +140,8 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
       category: editTemp.category,
       unit: editTemp.unit,
       minimumStock: editTemp.minimumStock,
-      needsRestock: shouldRestock
+      needsRestock: shouldRestock,
+      urgency: editTemp.urgency
     });
     setEditandoId(null);
   };
@@ -122,11 +151,11 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
     const material = materiais.find(m => m.id === editandoId);
     if (!material) return;
 
-    const novoConsumo = material.quantityUsed + editTemp.consumption;
+    const novoConsumo = material.consumedQuantity + editTemp.consumption;
     const novoEstoque = Math.max(0, material.currentStock - editTemp.consumption);
 
     atualizarMaterial(editandoId, {
-      quantityUsed: novoConsumo,
+      consumedQuantity: novoConsumo,
       currentStock: novoEstoque,
       needsRestock: novoEstoque <= material.minimumStock
     });
@@ -150,30 +179,8 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
   };
 
   // Helpers para exibição visual em Português
-  const getCategoryLabel = (cat: string) => {
-    const map: Record<string, string> = {
-      'CEMENT': 'Cimento',
-      'SAND': 'Areia',
-      'IRON': 'Ferro',
-      'BRICK': 'Tijolo',
-      'WOOD': 'Madeira',
-      'ELECTRICAL': 'Elétrica',
-      'HYDRAULIC': 'Hidráulica',
-      'OTHER': 'Outros'
-    };
-    return map[cat] || cat;
-  };
-
-  const getUnitLabel = (unit: string) => {
-    const map: Record<string, string> = {
-      'BAG': 'Saco',
-      'KG': 'kg',
-      'M3': 'm³',
-      'UNIT': 'Unid.',
-      'LITERS': 'Litro'
-    };
-    return map[unit] || unit;
-  };
+  const getCategoryLabel = (cat: string) => cat;
+  const getUnitLabel = (unit: string) => unit;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md border">
@@ -255,15 +262,14 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                         onChange={e => setEditTemp({ ...editTemp, category: e.target.value })}
                         className="w-full p-2 border rounded"
                       >
-                        <option value="OTHER">Selecione</option>
-                        <option value="CEMENT">Cimento</option>
-                        <option value="SAND">Areia</option>
-                        <option value="IRON">Ferro</option>
-                        <option value="BRICK">Tijolo</option>
-                        <option value="WOOD">Madeira</option>
-                        <option value="ELECTRICAL">Elétrica</option>
-                        <option value="HYDRAULIC">Hidráulica</option>
-                        <option value="OTHER">Outros</option>
+                        <option value="Outros">Outros</option>
+                        <option value="Cimento">Cimento</option>
+                        <option value="Areia">Areia</option>
+                        <option value="Ferro">Ferro</option>
+                        <option value="Tijolo">Tijolo</option>
+                        <option value="Madeira">Madeira</option>
+                        <option value="Elétrica">Elétrica</option>
+                        <option value="Hidráulica">Hidráulica</option>
                       </select>
                     </div>
                     <div>
@@ -273,12 +279,11 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                         onChange={e => setEditTemp({ ...editTemp, unit: e.target.value })}
                         className="w-full p-2 border rounded"
                       >
-                        <option value="UNIT">Selecione</option>
-                        <option value="BAG">Saco</option>
-                        <option value="KG">kg</option>
-                        <option value="M3">m³</option>
-                        <option value="UNIT">Unidade</option>
-                        <option value="LITERS">Litro</option>
+                        <option value="unid">Unid.</option>
+                        <option value="saco">Saco</option>
+                        <option value="kg">kg</option>
+                        <option value="m3">m³</option>
+                        <option value="litro">Litro</option>
                       </select>
                     </div>
                     <div>
@@ -288,6 +293,16 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                         value={editTemp.minimumStock}
                         onChange={e => setEditTemp({ ...editTemp, minimumStock: Number(e.target.value) })}
                         className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-1">Urgência</label>
+                      <input
+                        type="text"
+                        value={editTemp.urgency}
+                        onChange={e => setEditTemp({ ...editTemp, urgency: e.target.value })}
+                        className="w-full p-2 border rounded"
+                        placeholder="Ex: Alta"
                       />
                     </div>
                   </div>
@@ -342,11 +357,12 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                   </div>
 
                   <div className="pt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                    <p>Consumido: <strong>{material.quantityUsed} {getUnitLabel(material.unit)}</strong></p>
+                    <p>Consumido: <strong>{material.consumedQuantity} {getUnitLabel(material.unit)}</strong></p>
                     <p>Estoque atual: <strong className={material.currentStock <= material.minimumStock ? 'text-red-600' : 'text-green-600'}>
                       {material.currentStock} {getUnitLabel(material.unit)}
                     </strong></p>
                     {material.needsRestock && <span className="ml-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">Reposição necessária</span>}
+                    {material.urgency && <p>Urgência: <strong>{material.urgency}</strong></p>}
                   </div>
                 </div>
               ) : (
@@ -363,7 +379,7 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                     <div>
                       <p className="text-xs text-gray-600">Consumido</p>
                       <p className="text-lg font-bold text-orange-600">
-                        {material.quantityUsed} {getUnitLabel(material.unit)}
+                        {material.consumedQuantity} {getUnitLabel(material.unit)}
                       </p>
                     </div>
                   </div>
@@ -376,6 +392,7 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
                         Reposição
                       </span>
                     )}
+                    {material.urgency && <span className="ml-2">Urgência: {material.urgency}</span>}
                   </div>
                 </div>
               )}

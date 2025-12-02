@@ -23,6 +23,8 @@ export const FaseFundacao = () => {
 
   const initialData = phasesData['fundacao'];
 
+  console.log("initial Data fundacao", initialData)
+
   const handleSave = async (dados: any) => {
     const payload = {
       equipe: dados.equipe || [],
@@ -62,12 +64,12 @@ export const FaseFundacao = () => {
       onSave={handleSave}
       initialData={initialData}
     >
-      <SecaoConteudo secaoId="equipe" faseId="fundacao" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="fundacao" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="fundacao" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="fundacao" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="ferramentas" faseId="fundacao" initialData={initialData?.ferramentas} />
-      <SecaoConteudo secaoId="fotos" faseId="fundacao" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="fundacao" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="fundacao" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="fundacao" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="fundacao" initialData={initialData?.materials} />
+      <SecaoConteudo secaoId="ferramentas" faseId="fundacao" initialData={initialData?.tools} />
+      <SecaoConteudo secaoId="fotos" faseId="fundacao" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

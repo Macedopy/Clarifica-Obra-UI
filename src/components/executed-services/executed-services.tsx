@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Wrench, X, Plus, Edit3, Save, Clock, Play, Pause, CheckCircle } from 'lucide-react';
 
+interface BackendServico {
+  id: string;
+  phaseId: null;
+  name: string;
+  team: string;
+  plannedHours: number;
+  executedHours: number;
+  status: 'planejado' | 'iniciado' | 'andamento' | 'concluido';
+  progress: number;
+  notes: string;
+}
+
 interface Servico {
   id: string;
   name: string;
@@ -15,7 +27,7 @@ interface Servico {
 interface ServicosExecutadosProps {
   isReadOnly?: boolean;
   faseId: string;
-  initialData?: any;
+  initialData?: BackendServico[];
 }
 
 export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
@@ -45,11 +57,25 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   });
 
   useEffect(() => {
+    let transformedData: Servico[] = [];
     if (initialData && initialData.length > 0) {
-      setServicos(initialData);
+      transformedData = initialData.map(service => ({
+        id: service.id,
+        name: service.name,
+        team: service.team,
+        plannedHours: service.plannedHours,
+        executedHours: service.executedHours,
+        status: service.status,
+        progress: service.progress,
+        notes: service.notes || ''
+      }));
+      setServicos(transformedData);
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setServicos(JSON.parse(saved));
+      if (saved) {
+        const parsed = JSON.parse(saved) as Servico[];
+        setServicos(parsed);
+      }
     }
   }, [faseId, initialData]);
 

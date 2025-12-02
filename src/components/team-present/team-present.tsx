@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Users, X, Plus, Edit3, Save, Clock, UserCheck, UserX, Coffee } from 'lucide-react';
 
+interface TeamMemberDetails {
+  name: string;
+  role: string;
+  cpf: string | null;
+}
+
+interface BackendTeamMember {
+  id: string;
+  phaseId: null;
+  details: TeamMemberDetails;
+  hoursWorked: number;
+  status: 'presente' | 'ausente' | 'folga';
+  notes: string | null;
+}
+
 interface TeamMember {
   id: string;
   name: string;
   role: string;
   cpf: string;
   hoursWorked: number;
-  status: 'PRESENT' | 'ABSENT' | 'ON_LEAVE';
+  status: 'presente' | 'ausente' | 'folga';
   avatar: string;
   notes: string;
 }
@@ -15,8 +30,8 @@ interface TeamMember {
 interface EquipeUtilizadaProps {
   isReadOnly?: boolean;
   faseId: string;
-  onEquipeChange?: (equipe: TeamMember[]) => void;
-  initialData?: TeamMember[];
+  onEquipeChange?: (equipe: BackendTeamMember[]) => void;
+  initialData?: BackendTeamMember[];
 }
 
 export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
@@ -34,20 +49,45 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
     role: '',
     cpf: '',
     hoursWorked: 0,
-    status: 'PRESENT' as 'PRESENT' | 'ABSENT' | 'ON_LEAVE',
+    status: 'presente' as 'presente' | 'ausente' | 'folga',
     notes: '',
   });
 
   useEffect(() => {
+    let transformedData: TeamMember[] = [];
     if (initialData && initialData.length > 0) {
-      setMembers(initialData);
+      transformedData = initialData.map(member => ({
+        id: member.id,
+        name: member.details.name,
+        role: member.details.role,
+        cpf: member.details.cpf || '',
+        hoursWorked: member.hoursWorked,
+        status: member.status,
+        avatar: '',
+        notes: member.notes || '',
+      }));
+      setMembers(transformedData);
       onEquipeChange?.(initialData);
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as TeamMember[];
-        setMembers(parsed);
-        onEquipeChange?.(parsed);
+        transformedData = parsed;
+        setMembers(transformedData);
+        // Transform back to backend format for onEquipeChange if needed
+        const backendData = parsed.map(m => ({
+          id: m.id,
+          phaseId: null,
+          details: {
+            name: m.name,
+            role: m.role,
+            cpf: m.cpf || null,
+          },
+          hoursWorked: m.hoursWorked,
+          status: m.status,
+          notes: m.notes || null,
+        }));
+        onEquipeChange?.(backendData);
       }
     }
   }, [faseId, initialData]);
@@ -55,18 +95,30 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
   useEffect(() => {
     if (members.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-      onEquipeChange?.(members);
+      const backendData = members.map(m => ({
+        id: m.id,
+        phaseId: null,
+        details: {
+          name: m.name,
+          role: m.role,
+          cpf: m.cpf || null,
+        },
+        hoursWorked: m.hoursWorked,
+        status: m.status,
+        notes: m.notes || null,
+      }));
+      onEquipeChange?.(backendData);
     }
   }, [members]);
 
   const addMember = () => {
     const newMember: TeamMember = {
       id: Date.now().toString(),
-      name: 'New Member',
-      role: 'Helper',
+      name: 'Novo Membro',
+      role: 'Ajudante',
       cpf: '',
       hoursWorked: 8,
-      status: 'PRESENT',
+      status: 'presente',
       avatar: '',
       notes: '',
     };
@@ -100,24 +152,24 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
     setEditingId(null);
   };
 
-  const getStatusIcon = (status: 'PRESENT' | 'ABSENT' | 'ON_LEAVE') => {
+  const getStatusIcon = (status: 'presente' | 'ausente' | 'folga') => {
     switch (status) {
-      case 'PRESENT':
+      case 'presente':
         return <UserCheck className="text-green-600" size={18} />;
-      case 'ABSENT':
+      case 'ausente':
         return <UserX className="text-red-600" size={18} />;
-      case 'ON_LEAVE':
+      case 'folga':
         return <Coffee className="text-orange-600" size={18} />;
     }
   };
 
-  const getStatusColor = (status: 'PRESENT' | 'ABSENT' | 'ON_LEAVE') => {
+  const getStatusColor = (status: 'presente' | 'ausente' | 'folga') => {
     switch (status) {
-      case 'PRESENT':
+      case 'presente':
         return 'bg-green-100 text-green-800';
-      case 'ABSENT':
+      case 'ausente':
         return 'bg-red-100 text-red-800';
-      case 'ON_LEAVE':
+      case 'folga':
         return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -227,13 +279,13 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                   <select
                     value={editTemp.status}
                     onChange={(e) =>
-                      setEditTemp({ ...editTemp, status: e.target.value as 'PRESENT' | 'ABSENT' | 'ON_LEAVE' })
+                      setEditTemp({ ...editTemp, status: e.target.value as 'presente' | 'ausente' | 'folga' })
                     }
                     className="w-full p-2 border rounded"
                   >
-                    <option value="PRESENT">Presente</option>
-                    <option value="ABSENT">Ausente</option>
-                    <option value="ON_LEAVE">Folga</option>
+                    <option value="presente">Presente</option>
+                    <option value="ausente">Ausente</option>
+                    <option value="folga">Folga</option>
                   </select>
                   <textarea
                     value={editTemp.notes}
@@ -247,12 +299,12 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
                 <div>
                   <div className="flex flex-col items-center mb-3">
                     <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-{(member.name || '')
-  .split(' ')
-  .map((n) => n[0])
-  .join('')
-  .toUpperCase()
-  .slice(0, 2)}
+                      {(member.name || '')
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
                     </div>
                     <p className="font-bold text-gray-800 mt-2">{member.name}</p>
                     <p className="text-sm text-gray-600">{member.role}</p>

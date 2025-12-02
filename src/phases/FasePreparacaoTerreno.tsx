@@ -63,11 +63,11 @@ export const FasePreparacaoTerreno = () => {
       initialData={initialData}
     >
       <SecaoConteudo secaoId="geral" faseId="preparacao" initialData={initialData?.geral} />
-      <SecaoConteudo secaoId="equipe" faseId="preparacao" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="preparacao" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="preparacao" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="preparacao" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="fotos" faseId="preparacao" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="preparacao" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="preparacao" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="preparacao" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="preparacao" initialData={initialData?.materials} />
+      <SecaoConteudo secaoId="fotos" faseId="preparacao" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

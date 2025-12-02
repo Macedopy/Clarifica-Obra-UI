@@ -62,12 +62,12 @@ export const FaseEstrutura = () => {
       onSave={handleSave}
       initialData={initialData}
     >
-      <SecaoConteudo secaoId="equipe" faseId="estrutura" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="estrutura" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="estrutura" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="estrutura" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="ferramentas" faseId="estrutura" initialData={initialData?.ferramentas} />
-      <SecaoConteudo secaoId="fotos" faseId="estrutura" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="estrutura" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="estrutura" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="estrutura" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="estrutura" initialData={initialData?.materials} />
+      <SecaoConteudo secaoId="ferramentas" faseId="estrutura" initialData={initialData?.tools} />
+      <SecaoConteudo secaoId="fotos" faseId="estrutura" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

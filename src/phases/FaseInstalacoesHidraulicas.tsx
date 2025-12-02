@@ -62,12 +62,12 @@ export const FaseInstalacoesHidraulicas = () => {
       onSave={handleSave}
       initialData={initialData}
     >
-      <SecaoConteudo secaoId="equipe" faseId="instalacoes-hidraulicas" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="instalacoes-hidraulicas" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="instalacoes-hidraulicas" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="instalacoes-hidraulicas" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="ferramentas" faseId="instalacoes-hidraulicas" initialData={initialData?.ferramentas} />
-      <SecaoConteudo secaoId="fotos" faseId="instalacoes-hidraulicas" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="instalacoes-hidraulicas" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="instalacoes-hidraulicas" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="instalacoes-hidraulicas" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="instalacoes-hidraulicas" initialData={initialData?.materials} />
+      <SecaoConteudo secaoId="ferramentas" faseId="instalacoes-hidraulicas" initialData={initialData?.tools} />
+      <SecaoConteudo secaoId="fotos" faseId="instalacoes-hidraulicas" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

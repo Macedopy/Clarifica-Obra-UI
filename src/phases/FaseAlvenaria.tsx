@@ -62,12 +62,12 @@ export const FaseAlvenaria = () => {
       onSave={handleSave}
       initialData={initialData}
     >
-      <SecaoConteudo secaoId="equipe" faseId="alvenaria" initialData={initialData?.equipe} />
-      <SecaoConteudo secaoId="servicos" faseId="alvenaria" initialData={initialData?.servicos} />
-      <SecaoConteudo secaoId="maquinarios" faseId="alvenaria" initialData={initialData?.maquinarios} />
-      <SecaoConteudo secaoId="materiais" faseId="alvenaria" initialData={initialData?.materiais} />
-      <SecaoConteudo secaoId="ferramentas" faseId="alvenaria" initialData={initialData?.ferramentas} />
-      <SecaoConteudo secaoId="fotos" faseId="alvenaria" initialData={initialData?.fotos} />
+      <SecaoConteudo secaoId="equipe" faseId="alvenaria" initialData={initialData?.teamMembers} />
+      <SecaoConteudo secaoId="servicos" faseId="alvenaria" initialData={initialData?.services} />
+      <SecaoConteudo secaoId="maquinarios" faseId="alvenaria" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="materiais" faseId="alvenaria" initialData={initialData?.machinery} />
+      <SecaoConteudo secaoId="ferramentas" faseId="alvenaria" initialData={initialData?.tools} />
+      <SecaoConteudo secaoId="fotos" faseId="alvenaria" initialData={initialData?.photoRecords} />
     </PhaseLayout>
   );
 };

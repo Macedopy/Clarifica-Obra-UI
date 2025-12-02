@@ -1,12 +1,15 @@
 import { phaseEndpoints } from "../constants/phaseEndpoints";
 
 export interface PhaseData {
-  equipe?: any[];
-  servicos?: any[];
-  maquinarios?: any[];
-  materiais?: any[];
-  ferramentas?: any[];
-  fotos?: any[];
+  id?: string;
+  name?: string;
+  contractor?: string;
+  materials?: any[];
+  tools?: any[];
+  machinery?: any[];
+  teamMembers?: any[];
+  services?: any[];
+  photoRecords?: any[];
   geral?: any;  // Adicionado para suportar a fase de Preparação
 }
 
