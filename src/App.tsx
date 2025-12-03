@@ -2,6 +2,8 @@ import React from "react";
 import { PhasesBreadcrumb } from "./components/PhasesBreadcrumb";
 import Login from "./components/Login";
 
+import { ResumoDashboard } from "./components/ResumoDashboard"; 
+
 import { FasePreparacaoTerreno } from "./phases/FasePreparacaoTerreno";
 import { FaseFundacao } from "./phases/FaseFundacao";
 import { FaseEstrutura } from "./phases/FaseEstrutura";
@@ -25,6 +27,7 @@ const phaseComponents: Record<string, React.FC> = {
   "instalacoes-eletricas": FaseInstalacoesEletricas,
   revestimentos: FaseRevestimentos,
   acabamentos: FaseAcabamentos,
+  dashboard: ResumoDashboard, 
 };
 
 const AppContent = () => {

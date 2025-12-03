@@ -1,6 +1,6 @@
 // src/components/PhaseLayout.tsx
 import { CheckCircle } from "lucide-react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useObra } from "../contexts/ObraContext";
 
 interface PhaseLayoutProps {
@@ -16,10 +16,42 @@ interface PhaseLayoutProps {
 }
 
 export const PhaseLayout = ({ phase, children, onSave, initialData }: PhaseLayoutProps) => {
+  const { getPhaseProgress, updateSecaoProgress } = useObra();
   const [activeTab, setActiveTab] = useState(0);
-  const { getPhaseProgress } = useObra();
   const progressoReal = getPhaseProgress(phase.id);
   const Icon = phase.icon;
+
+  useEffect(() => {
+    const currentPhaseId = phase.id;
+    // Carregar e atualizar progresso apenas da seção de serviços a partir do localStorage ou initialData
+
+    // Seção: servicos
+    const servicosKey = `servicos-fase-${currentPhaseId}`;
+    const savedServicos = localStorage.getItem(servicosKey);
+    let servicosProgress = 0;
+    let servicosData: { progress: number }[] = [];
+    if (savedServicos) {
+      servicosData = JSON.parse(savedServicos) as { progress: number }[];
+    } else if (initialData?.services && initialData.services.length > 0) {
+      servicosData = initialData.services as { progress: number }[];
+      // Salvar no localStorage para consistência futura
+      localStorage.setItem(servicosKey, JSON.stringify(initialData.services.map((service: any) => ({
+        id: service.id,
+        name: service.name,
+        team: service.team,
+        plannedHours: service.plannedHours,
+        executedHours: service.executedHours,
+        status: service.status,
+        progress: service.progress,
+        notes: service.notes
+      }))));
+    }
+    if (servicosData.length > 0) {
+      const total = servicosData.reduce((sum: number, s: { progress: number }) => sum + s.progress, 0);
+      servicosProgress = Math.round(total / servicosData.length);
+    }
+    updateSecaoProgress(currentPhaseId, 'servicos', servicosProgress);
+  }, [phase.id, activeTab, updateSecaoProgress, initialData]);
 
   const handleSaveWithData = () => {
     // Coleta TODOS os dados reais dessa fase do localStorage (ou do contexto)

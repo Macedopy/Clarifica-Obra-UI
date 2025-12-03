@@ -71,7 +71,14 @@ export const FerramentasUtilizadas: React.FC<FerramentasUtilizadasProps> = ({
 
   useEffect(() => {
     let transformedData: ToolItem[] = [];
-    if (initialData && initialData.length > 0) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved) as ToolItem[];
+      setFerramentas(parsed);
+
+    }
+    else if (initialData && initialData.length > 0) {
       transformedData = initialData.map(tool => ({
         id: tool.id,
         name: tool.name,

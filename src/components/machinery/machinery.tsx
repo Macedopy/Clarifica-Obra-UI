@@ -86,9 +86,13 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
   });
 
   useEffect(() => {
-    let transformedData: MachineryItem[] = [];
-    if (initialData && initialData.length > 0) {
-      transformedData = initialData.map(machine => ({
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved) as MachineryItem[];
+      setMaquinarios(parsed);
+    }
+    else if (initialData && initialData.length > 0) {
+     const transformedData = initialData.map(machine => ({
         id: machine.id,
         name: machine.name,
         category: machine.category,
@@ -102,14 +106,8 @@ export const MaquinariosUtilizados: React.FC<MaquinariosUtilizadosProps> = ({
         notes: machine.notes || ''
       }));
       setMaquinarios(transformedData);
-    } else {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as MachineryItem[];
-        setMaquinarios(parsed);
-      }
-    }
-  }, [faseId, initialData]);
+    } 
+    }, [faseId, initialData]);
 
   useEffect(() => {
     if (maquinarios.length > 0) {

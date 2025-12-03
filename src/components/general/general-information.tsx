@@ -33,6 +33,13 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
   });
 
   useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved) as InfoGeral;
+      setInfo(parsed);
+
+    } 
     if (initialData) {
       setInfo(initialData);
     } else {

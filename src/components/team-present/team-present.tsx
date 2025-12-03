@@ -55,7 +55,13 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
 
   useEffect(() => {
     let transformedData: TeamMember[] = [];
-    if (initialData && initialData.length > 0) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved) as TeamMember[];
+      setMembers(parsed);
+
+    }
+    else if (initialData && initialData.length > 0) {
       transformedData = initialData.map(member => ({
         id: member.id,
         name: member.details.name,
@@ -68,28 +74,7 @@ export const EquipeUtilizada: React.FC<EquipeUtilizadaProps> = ({
       }));
       setMembers(transformedData);
       onEquipeChange?.(initialData);
-    } else {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as TeamMember[];
-        transformedData = parsed;
-        setMembers(transformedData);
-        // Transform back to backend format for onEquipeChange if needed
-        const backendData = parsed.map(m => ({
-          id: m.id,
-          phaseId: null,
-          details: {
-            name: m.name,
-            role: m.role,
-            cpf: m.cpf || null,
-          },
-          hoursWorked: m.hoursWorked,
-          status: m.status,
-          notes: m.notes || null,
-        }));
-        onEquipeChange?.(backendData);
-      }
-    }
+    } 
   }, [faseId, initialData]);
 
   useEffect(() => {

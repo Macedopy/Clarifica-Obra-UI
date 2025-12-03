@@ -61,7 +61,14 @@ export const MateriaisUtilizados: React.FC<MateriaisUtilizadosProps> = ({
 
   useEffect(() => {
     let transformedData: MaterialItem[] = [];
-    if (initialData && initialData.length > 0) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved) as MaterialItem[];
+      setMateriais(parsed);
+
+    }
+    else if (initialData && initialData.length > 0) {
       transformedData = initialData.map(material => ({
         id: material.id,
         name: material.name,

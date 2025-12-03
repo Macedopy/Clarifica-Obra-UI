@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wrench, X, Plus, Edit3, Save, Clock, Play, Pause, CheckCircle } from 'lucide-react';
+import { useObra } from '../../contexts/ObraContext';
 
 interface BackendServico {
   id: string;
@@ -35,6 +36,7 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   faseId,
   initialData
 }) => {
+  const { updateSecaoProgress } = useObra();
   const STORAGE_KEY = `servicos-fase-${faseId}`;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -84,6 +86,30 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
       localStorage.setItem(STORAGE_KEY, JSON.stringify(servicos));
     }
   }, [servicos]);
+
+  useEffect(() => {
+    let average = 0;
+    if (servicos.length > 0) {
+      const totalProgress = servicos.reduce((sum, s) => sum + s.progress, 0);
+      average = Math.round(totalProgress / servicos.length);
+    }
+    updateSecaoProgress(faseId, 'servicos', average);
+  }, [servicos, faseId, updateSecaoProgress]);
+
+  useEffect(() => {
+    if (editandoId) {
+      const planned = editTemp.plannedHours || 1;
+      const executed = editTemp.executedHours || 0;
+      const newProgress = Math.round((executed / planned) * 100);
+      if (newProgress !== editTemp.progress) {
+        setEditTemp(prev => ({ ...prev, progress: newProgress }));
+      }
+    }
+  }, [editTemp.executedHours, editTemp.plannedHours, editandoId]);
+
+  const averageProgress = servicos.length > 0 
+    ? Math.round(servicos.reduce((sum, s) => sum + s.progress, 0) / servicos.length) 
+    : 0;
 
   const adicionarServico = () => {
     const novo: Servico = {
@@ -181,6 +207,18 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
             Adicionar Serviço
           </button>
         )}
+      </div>
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Progresso Médio:</span>
+          <span className="font-bold text-orange-700">{averageProgress}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
+          <div
+            className="bg-orange-600 h-3 rounded-full transition-all"
+            style={{ width: `${averageProgress}%` }}
+          />
+        </div>
       </div>
 
       {servicos.length === 0 ? (
@@ -319,7 +357,7 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <div className="flex items-center gap-2 justify-end">
                         {getStatusIcon(servico.status)}
                         <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(servico.status)}`}>
-                          {servico.status}
+                          {servico.status.charAt(0).toUpperCase() + servico.status.slice(1)}
                         </span>
                       </div>
                     </div>
