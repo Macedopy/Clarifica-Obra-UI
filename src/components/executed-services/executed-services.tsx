@@ -40,6 +40,7 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
   const STORAGE_KEY = `servicos-fase-${faseId}`;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [editTemp, setEditTemp] = useState<{
     name: string;
     team: string;
@@ -100,15 +101,15 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
     if (editandoId) {
       const planned = editTemp.plannedHours || 1;
       const executed = editTemp.executedHours || 0;
-      const newProgress = Math.round((executed / planned) * 100);
+      const newProgress = Math.min(100, Math.round((executed / planned) * 100));
       if (newProgress !== editTemp.progress) {
         setEditTemp(prev => ({ ...prev, progress: newProgress }));
       }
     }
   }, [editTemp.executedHours, editTemp.plannedHours, editandoId]);
 
-  const averageProgress = servicos.length > 0 
-    ? Math.round(servicos.reduce((sum, s) => sum + s.progress, 0) / servicos.length) 
+  const averageProgress = servicos.length > 0
+    ? Math.round(servicos.reduce((sum, s) => sum + s.progress, 0) / servicos.length)
     : 0;
 
   const adicionarServico = () => {
@@ -125,9 +126,33 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
     setServicos(prev => [...prev, novo]);
   };
 
-  const removerServico = (id: string) => {
-    setServicos(prev => prev.filter(s => s.id !== id));
-    setEditandoId(null);
+  const removerServico = async (id: string) => {
+    // Verifica se é um ID temporário (criado pelo Date.now() - sem hífens)
+    // ou um UUID do banco (com hífens)
+    const isTempId = !id.includes('-');
+    if (!window.confirm("Tem certeza que deseja excluir este serviço?")) {
+      return;
+    }
+    if (isTempId) {
+      setServicos(prev => prev.filter(s => s.id !== id));
+      setEditandoId(null);
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8080/terrain-preparation/service/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok || response.status === 204) {
+        setServicos(prev => prev.filter(s => s.id !== id));
+        setEditandoId(null);
+      } else {
+        alert("Não foi possível excluir o serviço no servidor.");
+        console.error("Erro ao deletar:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Erro de conexão:", error);
+      alert("Erro de conexão ao tentar excluir.");
+    }
   };
 
   const atualizarServico = (id: string, updates: Partial<Servico>) => {
@@ -137,7 +162,7 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
           ? {
               ...s,
               ...updates,
-              progress: Math.round((updates.executedHours || s.executedHours) / (updates.plannedHours || s.plannedHours) * 100) || 0
+              progress: Math.min(100, Math.round((updates.executedHours || s.executedHours) / (updates.plannedHours || s.plannedHours) * 100) || 0)
             }
           : s
       )
@@ -155,10 +180,16 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
       progress: servico.progress,
       notes: servico.notes
     });
+    setError(null);
   };
 
   const salvarEdicao = () => {
     if (!editandoId) return;
+    if (editTemp.executedHours > editTemp.plannedHours) {
+      setError('As horas executadas não podem exceder as horas planejadas.');
+      return;
+    }
+    setError(null);
     atualizarServico(editandoId, {
       name: editTemp.name,
       team: editTemp.team,
@@ -169,6 +200,26 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
       progress: editTemp.progress
     });
     setEditandoId(null);
+  };
+
+  const handlePlannedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPlanned = Number(e.target.value);
+    setEditTemp({ ...editTemp, plannedHours: newPlanned });
+    if (newPlanned < editTemp.executedHours) {
+      setError('As horas planejadas não podem ser menores que as horas executadas.');
+    } else {
+      setError(null);
+    }
+  };
+
+  const handleExecutedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newExecuted = Number(e.target.value);
+    setEditTemp({ ...editTemp, executedHours: newExecuted });
+    if (newExecuted > editTemp.plannedHours) {
+      setError('As horas executadas não podem exceder as horas planejadas.');
+    } else {
+      setError(null);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -220,7 +271,6 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
           />
         </div>
       </div>
-
       {servicos.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <Wrench size={48} className="mx-auto mb-3 text-gray-300" />
@@ -262,7 +312,6 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                   </button>
                 </div>
               )}
-
               {editandoId === servico.id ? (
                 <div className="space-y-4">
                   <input
@@ -289,12 +338,11 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                         type="number"
                         min="1"
                         value={editTemp.plannedHours}
-                        onChange={e => setEditTemp({ ...editTemp, plannedHours: Number(e.target.value) })}
+                        onChange={handlePlannedChange}
                         className="w-full p-2 border rounded"
                       />
                     </div>
                   </div>
-
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium mb-1">Horas Executadas</label>
@@ -305,13 +353,12 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                           min="0"
                           step="0.5"
                           value={editTemp.executedHours}
-                          onChange={e => setEditTemp({ ...editTemp, executedHours: Number(e.target.value) })}
+                          onChange={handleExecutedChange}
                           className="flex-1 p-2 border rounded text-center font-bold text-blue-600"
                         />
                         <span className="text-sm">h</span>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium mb-1">Status</label>
                       <select
@@ -325,7 +372,6 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                         <option value="concluido">Concluído</option>
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium mb-1">Progresso</label>
                       <div className="w-full bg-gray-200 rounded-full h-3">
@@ -337,7 +383,6 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <p className="text-right text-sm font-medium mt-1">{editTemp.progress}%</p>
                     </div>
                   </div>
-
                   <textarea
                     value={editTemp.notes}
                     onChange={e => setEditTemp({ ...editTemp, notes: e.target.value })}
@@ -345,6 +390,7 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                     rows={2}
                     placeholder="Observações do serviço"
                   />
+                  {error && <p className="text-red-600 text-sm">{error}</p>}
                 </div>
               ) : (
                 <div>
@@ -362,7 +408,6 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       </div>
                     </div>
                   </div>
-
                   <div className="grid grid-cols-3 gap-3 text-center text-sm mb-3">
                     <div className="bg-blue-50 p-2 rounded">
                       <Clock className="mx-auto mb-1 text-blue-600" size={16} />
@@ -378,14 +423,12 @@ export const ServicosExecutados: React.FC<ServicosExecutadosProps> = ({
                       <p className="font-bold text-orange-700">{servico.progress}%</p>
                     </div>
                   </div>
-
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-orange-600 h-2 rounded-full transition-all"
                       style={{ width: `${servico.progress}%` }}
                     />
                   </div>
-
                   {servico.notes && (
                     <p className="text-xs text-gray-500 mt-3 italic">"{servico.notes}"</p>
                   )}

@@ -39,16 +39,16 @@ export const FasePreparacaoTerreno = () => {
       contractor: "Construtora Clarifica",
       
       // Empacota o objeto único dentro de uma Lista [ ] para o Java aceitar
-      geral: [
+      geral:
         {
           endereco: dadosGerais.endereco || "",
           areaTerreno: Number(dadosGerais.areaTerreno) || 0,
           topografia: dadosGerais.topografia || "plana",
-          dataInicio: dadosGerais.dataInicio || new Date().toISOString().split('T')[0],
+          dataInicio: dadosGerais.dataInicio || String(dados.dataInicio),
           responsavel: dadosGerais.responsavel || "",
           observacao: dadosGerais.observacao || ""
         }
-      ],
+      ,
 
       equipe: dados.equipe || [],
       servicos: dados.servicos || [],

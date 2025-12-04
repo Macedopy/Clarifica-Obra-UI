@@ -1,3 +1,4 @@
+// src/components/dashboard/general-information.tsx
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Square, Mountain, User, Edit3, Save, X } from 'lucide-react';
 
@@ -23,6 +24,10 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
 }) => {
   const STORAGE_KEY = `info-geral-fase-${faseId}`;
   const [editando, setEditando] = useState(false);
+  
+  // Controle para evitar salvar vazio antes de carregar
+  const [inicializado, setInicializado] = useState(false); 
+
   const [info, setInfo] = useState<InfoGeral>({
     endereco: '',
     areaTerreno: 0,
@@ -32,37 +37,58 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
     observacao: ''
   });
 
+  // 1. Efeito de CARREGAR (Roda ao abrir a aba)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
 
     if (saved) {
+      // Prioridade 1: Recupera o que estava na tela (edição local)
       const parsed = JSON.parse(saved) as InfoGeral;
       setInfo(parsed);
-
     } 
-    if (initialData) {
-      setInfo(initialData);
-    } else {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setInfo({ ...info, ...parsed });
-      }
+    else if (initialData) {
+      // Prioridade 2: Se não tem nada local, pega do Backend
+      setInfo({
+        endereco: initialData.endereco || '',
+        areaTerreno: initialData.areaTerreno || 0,
+        topografia: initialData.topografia || 'plana',
+        dataInicio: initialData.dataInicio || String(initialData.dataInicio),
+        responsavel: initialData.responsavel || '',
+        observacao: initialData.observacao || ''
+      });
     }
-  }, [faseId, initialData]);
+    
+    // LIBERA O SALVAMENTO: Avisa que o carregamento terminou
+    setInicializado(true);
 
+  }, [faseId, initialData]); // Dependências do carregamento
+
+  // 2. Efeito de SALVAR (Roda quando você digita)
   useEffect(() => {
+    // TRAVA DE SEGURANÇA: Só salva se já tiver terminado de carregar os dados iniciais
+    if (!inicializado) return;
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
-  }, [info]);
+  }, [info, STORAGE_KEY, inicializado]);
 
   const salvar = () => {
     setEditando(false);
   };
 
   const cancelar = () => {
+    // Ao cancelar, recarrega do localStorage para desfazer alterações não salvas
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       setInfo(JSON.parse(saved));
+    } else if (initialData) {
+       setInfo({
+        endereco: initialData.endereco || '',
+        areaTerreno: initialData.areaTerreno || 0,
+        topografia: initialData.topografia || 'plana',
+        dataInicio: initialData.dataInicio || new Date().toISOString().split('T')[0],
+        responsavel: initialData.responsavel || '',
+        observacao: initialData.observacao || ''
+      });
     }
     setEditando(false);
   };
@@ -141,10 +167,10 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
                 onChange={e => setInfo({ ...info, topografia: e.target.value as any })}
                 className="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-cyan-500"
               >
-                <option value="plano">Plano</option>
-                <option value="inclinado">Inclinado</option>
-                <option value="colinoso">Colinoso</option>
-                <option value="montanhoso">Montanhoso</option>
+                <option value="plana">Plana</option>
+                <option value="inclinada">Inclinada</option>
+                <option value="acidentada">Acidentada</option>
+                <option value="com desnível">Com desnível</option>
               </select>
             ) : (
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
@@ -152,7 +178,7 @@ export const InformacoesGerais: React.FC<InformacoesGeraisProps> = ({
                 info.topografia === 'inclinada' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-orange-100 text-orange-800'
               }`}>
-                {info.topografia}
+                {info.topografia ? info.topografia.charAt(0).toUpperCase() + info.topografia.slice(1) : 'Plana'}
               </span>
             )}
           </div>

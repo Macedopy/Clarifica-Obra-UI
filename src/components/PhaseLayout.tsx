@@ -56,6 +56,7 @@ export const PhaseLayout = ({ phase, children, onSave, initialData }: PhaseLayou
   const handleSaveWithData = () => {
     // Coleta TODOS os dados reais dessa fase do localStorage (ou do contexto)
     const dadosDaFase = {
+      geral: JSON.parse(localStorage.getItem(`geral-fase-${phase.id}`) || "{}"),
       equipe: JSON.parse(localStorage.getItem(`equipe-fase-${phase.id}`) || "[]"),
       servicos: JSON.parse(localStorage.getItem(`servicos-fase-${phase.id}`) || "[]"),
       maquinarios: JSON.parse(localStorage.getItem(`maquinarios-fase-${phase.id}`) || "[]"),
